@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h3>✏️ Edit Job: {{ job.title }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Job Title *</label>
+                        <input type="text" class="form-control" id="title" name="title" value="{{ job.title }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description *</label>
+                        <textarea class="form-control" id="description" name="description" rows="5" required>{{ job.description }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="min_experience" class="form-label">Min Experience (years)</label>
+                            <input type="number" class="form-control" id="min_experience" name="min_experience" value="{{ job.min_experience or 0 }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="salary_min" class="form-label">Min Salary ($)</label>
+                            <input type="number" class="form-control" id="salary_min" name="salary_min" value="{{ job.salary_min or '' }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="salary_max" class="form-label">Max Salary ($)</label>
+                            <input type="number" class="form-control" id="salary_max" name="salary_max" value="{{ job.salary_max or '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Required Skills</label>
+                        <div id="skills-container">
+                            {% for skill in job_skills %}
+                            <div class="row mb-2 skill-row">
+                                <div class="col-md-7">
+                                    <input type="text" name="skills" class="form-control" value="{{ skill.skill_name }}" placeholder="Skill name">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="number" name="importance_weights" class="form-control" value="{{ skill.importance_weight }}" placeholder="Importance (1-5)" min="1" max="5">
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-danger remove-skill">✖</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" id="add-skill" class="btn btn-sm btn-secondary">+ Add Another Skill</button>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning">Update Job</button>
+                        <a href="{{ url_for('company_jobs') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('add-skill').addEventListener('click', function() {
+        const container = document.getElementById('skills-container');
+        const newRow = document.createElement('div');
+        newRow.className = 'row mb-2 skill-row';
+        newRow.innerHTML = `
+            <div class="col-md-7">
+                <input type="text" name="skills" class="form-control" placeholder="Skill name">
+            </div>
+            <div class="col-md-4">
+                <input type="number" name="importance_weights" class="form-control" placeholder="Importance (1-5)" min="1" max="5">
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-danger remove-skill">✖</button>
+            </div>
+        `;
+        container.appendChild(newRow);
+        
+        newRow.querySelector('.remove-skill').addEventListener('click', function() {
+            newRow.remove();
+        });
+    });
+    
+    document.querySelectorAll('.remove-skill').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.closest('.skill-row').remove();
+        });
+    });
+</script>
+{% endblock %}

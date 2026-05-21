@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 text-center">
+        <h1 class="display-4 mb-4">🎯 AI Skill & Job Recommendation System</h1>
+        <p class="lead">Find the perfect job match based on your skills and experience</p>
+        <hr class="my-4">
+        <p>For Students, Companies, and Career Services</p>
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Get Started →</a>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>🎓 Students</h3>
+                <p>Get personalized job recommendations based on your skills</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>🏢 Companies</h3>
+                <p>Post jobs and find the best candidates</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>📊 Career Services</h3>
+                <p>Track placement analytics and skill trends</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

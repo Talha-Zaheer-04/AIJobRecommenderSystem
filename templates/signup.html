@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white text-center">
+                <h3>📝 Create New Account</h3>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div style="font-size: 60px;">🎓</div>
+                                <h4>Student Account</h4>
+                                <p>For students looking for job opportunities</p>
+                                <a href="{{ url_for('signup_student') }}" class="btn btn-primary">
+                                    Sign Up as Student
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div style="font-size: 60px;">🏢</div>
+                                <h4>Company Account</h4>
+                                <p>For recruiters posting jobs</p>
+                                <a href="{{ url_for('signup_company') }}" class="btn btn-success">
+                                    Sign Up as Company
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <p class="text-center mb-0">
+                    Already have an account? <a href="{{ url_for('login') }}">Login here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

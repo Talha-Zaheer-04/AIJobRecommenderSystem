@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4>🏢 Company Profile</h4>
+                <a href="{{ url_for('edit_company_profile') }}" class="btn btn-sm btn-light">✏️ Edit</a>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <div style="font-size: 80px;">🏭</div>
+                </div>
+                <h3>{{ company.company_name }}</h3>
+                <p class="text-muted">{{ company.industry or 'Industry not specified' }}</p>
+                <hr>
+                <a href="{{ url_for('edit_company_profile') }}" class="btn btn-warning w-100 mb-2">
+                    ✏️ Edit Profile
+                </a>
+                <a href="{{ url_for('change_company_password') }}" class="btn btn-outline-danger w-100">
+                    🔐 Change Password
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4>📋 Company Details</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 150px;">Company Name:</th>
+                        <td>{{ company.company_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ company.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Industry:</th>
+                        <td>{{ company.industry or 'Not specified' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Location:</th>
+                        <td>{{ company.location or 'Not specified' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Company ID:</th>
+                        <td>{{ company.company_id }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-success text-white">
+                <h4>📊 Quick Stats</h4>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-6">
+                        <h3>{{ jobs_count or 0 }}</h3>
+                        <p>Jobs Posted</p>
+                        <a href="{{ url_for('company_jobs') }}" class="btn btn-sm btn-primary">View Jobs</a>
+                    </div>
+                    <div class="col-md-6">
+                        <h3>{{ applications_count or 0 }}</h3>
+                        <p>Total Applications</p>
+                        <a href="{{ url_for('company_jobs') }}" class="btn btn-sm btn-info">View Applicants</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

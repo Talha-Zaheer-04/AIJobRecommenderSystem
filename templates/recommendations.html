@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>🎯 Your Job Recommendations</h2>
+        <p>Jobs ranked by match score based on your skills</p>
+    </div>
+    <div class="col-auto">
+        <form method="GET" class="row g-2">
+            <div class="col-auto">
+                <label>Min Score:</label>
+            </div>
+            <div class="col-auto">
+                <input type="number" name="min_score" value="{{ min_score }}" class="form-control" step="5">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    {% if recommendations %}
+        {% for job in recommendations %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 job-card" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#jobModal{{ job.job_id }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ job.title }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ job.company_name }} - {{ job.location }}</h6>
+                        
+                        <div class="mb-2">
+                            Match Score: 
+                            <span class="{% if job.match_score >= 30 %}match-score-high
+                                         {% elif job.match_score >= 15 %}match-score-medium
+                                         {% else %}match-score-low{% endif %}">
+                                {{ job.match_score }}
+                            </span>
+                        </div>
+                        
+                        <p class="card-text">{{ job.description[:150] if job.description else 'No description' }}...</p>
+                        <p><strong>Min Experience:</strong> {{ job.min_experience or 0 }} years</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <button class="btn btn-primary" onclick="event.stopPropagation(); window.location.href='{{ url_for('apply_to_job', job_id=job.job_id) }}'">
+                                📝 Apply Now
+                            </button>
+                            <small class="text-muted">Click card for details →</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Details Modal -->
+            <div class="modal fade" id="jobModal{{ job.job_id }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">{{ job.title }}</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h6>🏢 Company</h6>
+                                    <p>{{ job.company_name }}</p>
+                                    
+                                    <h6>📍 Location</h6>
+                                    <p>{{ job.location }}</p>
+                                    
+                                    <h6>📝 Job Description</h6>
+                                    <p>{{ job.description }}</p>
+                                    
+                                    <h6>💼 Requirements</h6>
+                                    <ul>
+                                        <li>Minimum Experience: {{ job.min_experience or 0 }} years</li>
+                                        {% if job.salary_min or job.salary_max %}
+                                        <li>Salary Range: ${{ '{:,.0f}'.format(job.salary_min) if job.salary_min else '?' }} - ${{ '{:,.0f}'.format(job.salary_max) if job.salary_max else '?' }}</li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6>🎯 Your Match Score</h6>
+                                            <h2 class="text-center 
+                                                {% if job.match_score >= 30 %}text-success
+                                                {% elif job.match_score >= 15 %}text-warning
+                                                {% else %}text-danger{% endif %}">
+                                                {{ job.match_score }}
+                                            </h2>
+                                            <hr>
+                                            <h6>📊 Required Skills</h6>
+                                            <div id="job-skills-{{ job.job_id }}">
+                                                Loading skills...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <a href="{{ url_for('apply_to_job', job_id=job.job_id) }}" class="btn btn-success">
+                                ✅ Apply Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col">
+            <div class="alert alert-info">
+                No recommendations found. Try adding more skills to your profile!
+                <br><br>
+                <a href="{{ url_for('manage_skills') }}" class="btn btn-primary">Manage Your Skills</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    // Fetch and display job skills for each modal when opened
+    document.querySelectorAll('[id^="jobModal"]').forEach(modal => {
+        modal.addEventListener('show.bs.modal', function(event) {
+            const modalId = this.id;
+            const jobId = modalId.replace('jobModal', '');
+            
+            fetch(`/get_job_skills/${jobId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const skillsContainer = document.getElementById(`job-skills-${jobId}`);
+                    if (data.skills && data.skills.length > 0) {
+                        let html = '<ul class="list-unstyled">';
+                        data.skills.forEach(skill => {
+                            html += `<li><strong>${skill.skill_name}</strong> - Importance: ${skill.importance_weight}/5</li>`;
+                        });
+                        html += '</ul>';
+                        skillsContainer.innerHTML = html;
+                    } else {
+                        skillsContainer.innerHTML = '<p class="text-muted">No specific skills listed</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching skills:', error);
+                });
+        });
+    });
+</script>
+
+<style>
+    .job-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .job-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}

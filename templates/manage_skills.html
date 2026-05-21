@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4>📚 Your Current Skills</h4>
+            </div>
+            <div class="card-body">
+                {% if user_skills %}
+                    {% for skill in user_skills %}
+                        <div class="border rounded p-2 mb-2">
+                            <form method="POST" action="{{ url_for('update_skill', skill_id=skill.skill_id) }}">
+                                <div class="row">
+                                    <div class="col-md-5">
+                                        <strong>{{ skill.skill_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ skill.category }}</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small">Level (1-5)</label>
+                                        <select name="proficiency_level" class="form-select form-select-sm">
+                                            {% for i in range(1, 6) %}
+                                                <option value="{{ i }}" {% if skill.proficiency_level == i %}selected{% endif %}>
+                                                    {{ i }} - {% if i == 1 %}Beginner{% elif i == 2 %}Basic{% elif i == 3 %}Intermediate{% elif i == 4 %}Advanced{% else %}Expert{% endif %}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Years</label>
+                                        <input type="number" name="years_experience" value="{{ skill.years_experience }}" class="form-control form-control-sm" step="0.5" min="0">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn btn-sm btn-warning w-100 mt-4">Update</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <form method="POST" action="{{ url_for('remove_skill', skill_id=skill.skill_id) }}" class="mt-2" onsubmit="return confirm('Remove this skill?')">
+                                <button type="submit" class="btn btn-sm btn-danger w-100">Remove</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info">No skills added yet.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">
+                <h4>➕ Add Existing Skill</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_skill') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Select Skill</label>
+                        <select name="skill_id" class="form-select" required>
+                            <option value="">Choose a skill...</option>
+                            {% for skill in available_skills %}
+                                <option value="{{ skill.skill_id }}">{{ skill.skill_name }} ({{ skill.category }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Proficiency (1-5)</label>
+                            <select name="proficiency_level" class="form-select">
+                                <option value="1">1 - Beginner</option>
+                                <option value="2">2 - Basic</option>
+                                <option value="3" selected>3 - Intermediate</option>
+                                <option value="4">4 - Advanced</option>
+                                <option value="5">5 - Expert</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Years Experience</label>
+                            <input type="number" name="years_experience" class="form-control" value="0" step="0.5" min="0">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 mt-3">Add Skill</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4>✨ Add Custom Skill</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_new_skill') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Skill Name</label>
+                        <input type="text" name="skill_name" class="form-control" required placeholder="e.g., Rust, Figma">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <input type="text" name="category" class="form-control" placeholder="e.g., Programming, Design">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Proficiency (1-5)</label>
+                            <select name="proficiency_level" class="form-select">
+                                <option value="1">1 - Beginner</option>
+                                <option value="2">2 - Basic</option>
+                                <option value="3" selected>3 - Intermediate</option>
+                                <option value="4">4 - Advanced</option>
+                                <option value="5">5 - Expert</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Years Experience</label>
+                            <input type="number" name="years_experience" class="form-control" value="0" step="0.5" min="0">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-info w-100 mt-3">Create & Add</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col text-center">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+        <a href="{{ url_for('recommendations') }}" class="btn btn-primary">View Recommendations</a>
+    </div>
+</div>
+{% endblock %}
