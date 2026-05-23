@@ -4,12 +4,10 @@ Bridge between Flask app and ML components
 """
 
 from ml.hybrid_recommender import HybridRecommender
-from ml.skill_matcher import SkillMatcher
-from ml.data_preprocessor import DataPreprocessor
+from ml.config import RECOMMENDATION_STRATEGIES
 
 # Global instance (load once)
 _hybrid_recommender = None
-_skill_matcher = None
 
 def get_hybrid_recommender():
     """Get or create hybrid recommender instance"""
@@ -19,28 +17,62 @@ def get_hybrid_recommender():
         _hybrid_recommender.load_models()
     return _hybrid_recommender
 
-def get_skill_matcher():
-    """Get or create skill matcher instance"""
-    global _skill_matcher
-    if _skill_matcher is None:
-        _skill_matcher = SkillMatcher()
-        _skill_matcher.load_data()
-    return _skill_matcher
-
-def get_ml_recommendations(user_id, method='hybrid'):
+def get_recommendations(user_id, strategy='pure_skill', limit=10):
     """
-    Get ML-powered recommendations
+    Get ML-powered recommendations for a student
     
-    Parameters:
-    - user_id: Student ID
-    - method: 'hybrid', 'skill_only', or 'collab_only'
+    Args:
+        user_id: Student's user ID
+        strategy: 'pure_skill', 'balanced', 'community', 'trending'
+        limit: Max number of recommendations
+    
+    Returns:
+        List of job recommendations
     """
+    recommender = get_hybrid_recommender()
+    recommendations = recommender.get_recommendations_by_strategy(user_id, strategy=strategy)
+    
+    # Apply limit
+    if limit and len(recommendations) > limit:
+        recommendations = recommendations[:limit]
+    
+    return recommendations
+
+def get_recommendation_strategies():
+    """Return available recommendation strategies"""
+    return {
+        'pure_skill': '🎯 Skill Based',
+        'balanced': '⚖️ Balanced',
+        'community': '👥 Social Recommendation',
+        'trending': '🔥 Trending'
+    }
+
+def get_strategy_description(strategy):
+    """Get description for a strategy"""
+    descriptions = {
+        'pure_skill': 'Based purely on your skills matching job requirements',
+        'balanced': '50% Skills + 30% Similar Users + 20% Popular Jobs',
+        'community': 'Based on what similar students applied to',
+        'trending': 'Popular jobs that many students are applying to'
+    }
+    return descriptions.get(strategy, '')
+
+def refresh_ml_models():
+    """Force refresh of ML models"""
+    global _hybrid_recommender
+    _hybrid_recommender = None
+    return {"status": "success", "message": "Models will reload on next request"}
+
+# Keep legacy functions for compatibility
+def get_ml_recommendations(user_id, method='hybrid'):
+    """Legacy function - for backward compatibility"""
     if method == 'hybrid':
-        recommender = get_hybrid_recommender()
-        return recommender.get_hybrid_recommendations(user_id)
+        return get_recommendations(user_id, strategy='pure_skill')
     elif method == 'skill_only':
-        matcher = get_skill_matcher()
-        return matcher.get_enhanced_recommendations(user_id)
+        return get_recommendations(user_id, strategy='pure_skill')
     else:
-        # collab_only - would need to implement
         return []
+
+def get_recommendation_methods():
+    """Legacy function - for backward compatibility"""
+    return get_recommendation_strategies()

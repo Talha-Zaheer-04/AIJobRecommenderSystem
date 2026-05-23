@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>📊 Compare Recommendation Methods</h2>
+<p class="text-muted">See how different AI methods rank jobs for you</p>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5>🤖 Hybrid Method</h5>
+                <small>Skill Match + Collaborative Filtering</small>
+            </div>
+            <div class="card-body">
+                {% if hybrid_recs %}
+                    <ol>
+                    {% for job in hybrid_recs %}
+                        <li class="mb-2">
+                            <strong>{{ job.title }}</strong><br>
+                            <small>{{ job.company_name }} - Score: {{ "%.1f"|format(job.match_score or 0) }}</small>
+                        </li>
+                    {% endfor %}
+                    </ol>
+                {% else %}
+                    <p class="text-muted">No recommendations</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5>📚 Skill-Based Only</h5>
+                <small>Matches your skills with job requirements</small>
+            </div>
+            <div class="card-body">
+                {% if skill_recs %}
+                    <ol>
+                    {% for job in skill_recs %}
+                        <li class="mb-2">
+                            <strong>{{ job.title }}</strong><br>
+                            <small>{{ job.company_name }} - Score: {{ "%.1f"|format(job.ml_match_score or 0) }}</small>
+                        </li>
+                    {% endfor %}
+                    </ol>
+                {% else %}
+                    <p class="text-muted">No recommendations</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5>👥 Collaborative Only</h5>
+                <small>Based on similar users' applications</small>
+            </div>
+            <div class="card-body">
+                {% if collab_recs %}
+                    <ol>
+                    {% for job in collab_recs %}
+                        <li class="mb-2">
+                            <strong>{{ job.title }}</strong><br>
+                            <small>{{ job.company_name }} - Score: {{ "%.1f"|format(job.collab_score or 0) }}</small>
+                        </li>
+                    {% endfor %}
+                    </ol>
+                {% else %}
+                    <p class="text-muted">No recommendations yet. Need more user data.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('recommendations') }}" class="btn btn-primary">Back to Recommendations</a>
+</div>
+{% endblock %}

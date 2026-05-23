@@ -1,83 +1,131 @@
-# ml/skill_matcher.py
+# ml/skill_matcher.py - USING EXACT DEBUG LOGIC
 """
-Enhanced skill-based matching using cosine similarity
+Skill-based matching using direct database queries (same as debug script)
 """
 
-import numpy as np
 import pandas as pd
-from sklearn.metrics.pairwise import cosine_similarity
 from ml.data_preprocessor import DataPreprocessor
-from ml.config import SKILL_MATCH_THRESHOLD
 
 class SkillMatcher:
     def __init__(self):
         self.preprocessor = DataPreprocessor()
-        self.user_skill_matrix = None
-        self.job_skill_matrix = None
-        self.skill_names = None
     
-    def load_data(self):
-        """Load and prepare skill matrices"""
-        self.user_skill_matrix = self.preprocessor.load_user_skill_matrix()
-        self.job_skill_matrix = self.preprocessor.load_job_skill_matrix()
+    def calculate_match_score(self, user_id, job_id):
+        """Calculate match score using same logic as debug script"""
+        conn = self.preprocessor.get_connection()
+        if not conn:
+            return 0
         
-        # Align skill columns
-        common_skills = self.user_skill_matrix.columns.intersection(
-            self.job_skill_matrix.columns
-        )
-        self.user_skill_matrix = self.user_skill_matrix[common_skills]
-        self.job_skill_matrix = self.job_skill_matrix[common_skills]
+        cursor = conn.cursor(dictionary=True)
         
-        self.skill_names = common_skills.tolist()
+        # Get user's skills
+        cursor.execute("""
+            SELECT s.skill_name, us.proficiency_level
+            FROM User_Skills us
+            JOIN Skills s ON us.skill_id = s.skill_id
+            WHERE us.user_id = %s
+        """, (user_id,))
+        user_skills = {row['skill_name']: row['proficiency_level'] for row in cursor.fetchall()}
         
-        return self
+        # Get job's required skills
+        cursor.execute("""
+            SELECT s.skill_name, js.importance_weight
+            FROM Job_Skills js
+            JOIN Skills s ON js.skill_id = s.skill_id
+            WHERE js.job_id = %s
+        """, (job_id,))
+        job_skills = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        if not job_skills:
+            return 0
+        
+        perfect_score = 0
+        user_score = 0
+        
+        for skill in job_skills:
+            skill_name = skill['skill_name']
+            importance = skill['importance_weight']
+            user_prof = user_skills.get(skill_name, 0)
+            
+            # Perfect user has proficiency 5 for all skills
+            perfect_score += 5 * importance
+            user_score += user_prof * importance
+        
+        if perfect_score > 0:
+            percentage = (user_score / perfect_score) * 100
+        else:
+            percentage = 0
+        
+        return round(percentage, 1)
     
-    def calculate_match_scores(self, user_id):
-        """
-        Calculate cosine similarity between user and all jobs
-        """
-        if self.user_skill_matrix is None:
-            self.load_data()
-        
-        # Get user vector
-        if user_id not in self.user_skill_matrix.index:
-            return pd.Series(dtype=float)
-        
-        user_vector = self.user_skill_matrix.loc[user_id].values.reshape(1, -1)
-        
-        # Get all job vectors
-        job_vectors = self.job_skill_matrix.values
-        
-        # Calculate cosine similarity
-        similarities = cosine_similarity(user_vector, job_vectors)[0]
-        
-        # Create results DataFrame
-        results = pd.DataFrame({
-            'job_id': self.job_skill_matrix.index,
-            'ml_match_score': similarities * 100  # Convert to percentage
-        })
-        
-        # Filter by threshold
-        results = results[results['ml_match_score'] >= SKILL_MATCH_THRESHOLD]
-        results = results.sort_values('ml_match_score', ascending=False)
-        
-        return results
-    
-    def get_enhanced_recommendations(self, user_id, limit=10):
-        """
-        Get enhanced skill-based recommendations
-        """
-        scores = self.calculate_match_scores(user_id)
-        
-        if scores.empty:
+    def get_enhanced_recommendations(self, user_id, limit=20):
+        """Get job recommendations for a user"""
+        conn = self.preprocessor.get_connection()
+        if not conn:
             return []
         
-        # Get job details
-        preprocessor = DataPreprocessor()
-        jobs_df = preprocessor.load_all_jobs_with_skills()
+        cursor = conn.cursor(dictionary=True)
         
-        # Merge with scores
-        results = jobs_df.merge(scores, on='job_id')
-        results = results.head(limit)
+        # Get all jobs
+        cursor.execute("""
+            SELECT DISTINCT j.job_id, j.title, j.description, j.min_experience, 
+                   j.salary_min, j.salary_max, c.company_name, c.location
+            FROM Jobs j
+            JOIN Companies c ON j.company_id = c.company_id
+        """)
+        jobs = cursor.fetchall()
+        cursor.close()
+        conn.close()
         
-        return results.to_dict('records')
+        results = []
+        for job in jobs:
+            score = self.calculate_match_score(user_id, job['job_id'])
+            job['ml_match_score'] = score
+            job['match_score'] = score
+            results.append(job)
+        
+        # Sort by score (highest first)
+        results.sort(key=lambda x: x['match_score'], reverse=True)
+        
+        # Add required skills info
+        for result in results[:limit]:
+            result['required_skills'] = self._get_job_skills(result['job_id'])
+        
+        return results[:limit]
+    
+    def _get_job_skills(self, job_id):
+        """Get required skills for a job"""
+        conn = self.preprocessor.get_connection()
+        if not conn:
+            return ""
+        
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT s.skill_name, js.importance_weight
+            FROM Job_Skills js
+            JOIN Skills s ON js.skill_id = s.skill_id
+            WHERE js.job_id = %s
+        """, (job_id,))
+        skills = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return ', '.join([f"{s['skill_name']}({s['importance_weight']})" for s in skills])
+    
+    def calculate_match_scores(self, user_id):
+        """Return DataFrame of match scores (for compatibility with hybrid recommender)"""
+        recommendations = self.get_enhanced_recommendations(user_id, limit=50)
+        
+        if not recommendations:
+            return pd.DataFrame()
+        
+        df = pd.DataFrame(recommendations)
+        df = df[['job_id', 'ml_match_score']]
+        return df
+    
+    def load_data(self):
+        """Compatibility method"""
+        return self
