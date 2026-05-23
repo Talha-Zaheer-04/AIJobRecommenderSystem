@@ -3,9 +3,56 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from db_config import get_db_connection
 from recommendation_engine import get_job_recommendations, get_user_profile, apply_for_job
 import mysql.connector
+from ml_integration import get_ml_recommendations
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
+
+
+# ML integration
+@app.route('/recommendations')
+def recommendations():
+    if session.get('user_type') != 'student':
+        return redirect(url_for('login'))
+    
+    min_score = request.args.get('min_score', 0, type=int)
+    method = request.args.get('method', 'hybrid')  # hybrid, skill_only, collab_only
+    
+    # Get ML-based recommendations
+    ml_recs = get_ml_recommendations(session['user_id'], method=method)
+    
+    # Filter by min_score if needed
+    if min_score > 0:
+        ml_recs = [r for r in ml_recs if r.get('match_score', 0) >= min_score]
+    
+    return render_template('recommendations.html', 
+                         recommendations=ml_recs, 
+                         min_score=min_score,
+                         current_method=method)
+
+@app.route('/recommendations/compare')
+def compare_recommendations():
+    """Compare different recommendation methods"""
+    if session.get('user_type') != 'student':
+        return redirect(url_for('login'))
+    
+    from ml_integration import get_hybrid_recommender, get_skill_matcher
+    
+    user_id = session['user_id']
+    
+    # Get recommendations from different methods
+    skill_matcher = get_skill_matcher()
+    hybrid_recommender = get_hybrid_recommender()
+    
+    skill_recs = skill_matcher.get_enhanced_recommendations(user_id, limit=10)
+    hybrid_recs = hybrid_recommender.get_hybrid_recommendations(user_id)
+    
+    return render_template('compare_recommendations.html',
+                         skill_recs=skill_recs[:10],
+                         hybrid_recs=hybrid_recs[:10])
+
+
+
 
 
 # ==================== PUBLIC ROUTES ====================
