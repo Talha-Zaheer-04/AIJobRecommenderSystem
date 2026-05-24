@@ -1,63 +1,176 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h3>📋 Job Details: {{ job.title }}</h3>
-            </div>
-            <div class="card-body">
-                <h5>{{ job.company_name }} <small class="text-muted">({{ job.location }})</small></h5>
-                <hr>
-                
-                <h6>📝 Description</h6>
-                <p>{{ job.description }}</p>
-                
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <h6>💼 Requirements</h6>
-                        <ul>
-                            <li>Minimum Experience: {{ job.min_experience or 0 }} years</li>
-                        </ul>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Job Details Card -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">
+                            <i class="fas fa-briefcase"></i> {{ job.title }}
+                        </h3>
+                        <span class="badge bg-light text-dark">
+                            <i class="fas fa-building"></i> {{ job.company_name }}
+                        </span>
                     </div>
-                    <div class="col-md-6">
-                        <h6>💰 Salary Range</h6>
-                        <p>
-                            {% if job.salary_min and job.salary_max %}
-                                ${{ '{:,.0f}'.format(job.salary_min) }} - ${{ '{:,.0f}'.format(job.salary_max) }}
-                            {% elif job.salary_min %}
-                                From ${{ '{:,.0f}'.format(job.salary_min) }}
-                            {% elif job.salary_max %}
-                                Up to ${{ '{:,.0f}'.format(job.salary_max) }}
-                            {% else %}
-                                Not specified
-                            {% endif %}
+                </div>
+                
+                <div class="card-body">
+                    <!-- Company & Location -->
+                    <div class="mb-3">
+                        <h5 class="text-primary">
+                            <i class="fas fa-building"></i> {{ job.company_name }}
+                        </h5>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-map-marker-alt"></i> {{ job.location }}
                         </p>
                     </div>
-                </div>
-                
-                <div class="alert alert-info mt-3">
-                    <strong>📊 Your Match Score:</strong> 
-                    <span class="{% if job.match_score >= 30 %}match-score-high
-                                 {% elif job.match_score >= 15 %}match-score-medium
-                                 {% else %}match-score-low{% endif %}">
-                        {{ job.match_score }}
-                    </span>
-                </div>
-                
-                <form method="POST" class="mt-4">
-                    <div class="alert alert-warning">
-                        <strong>Confirm Application</strong><br>
-                        By clicking submit, you agree to apply for this position.
+                    
+                    <hr>
+                    
+                    <!-- Job Description -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold">
+                            <i class="fas fa-file-alt"></i> Job Description
+                        </h6>
+                        <p class="text-muted">{{ job.description }}</p>
                     </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success btn-lg">✅ Submit Application</button>
-                        <a href="{{ url_for('recommendations') }}" class="btn btn-secondary">← Back to Recommendations</a>
+                    
+                    <!-- Requirements & Salary -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0 h-100">
+                                <div class="card-body">
+                                    <h6 class="fw-bold">
+                                        <i class="fas fa-clipboard-list"></i> Requirements
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>
+                                            <i class="fas fa-clock"></i> 
+                                            Minimum Experience: {{ job.min_experience or 0 }} years
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0 h-100">
+                                <div class="card-body">
+                                    <h6 class="fw-bold">
+                                        <i class="fas fa-dollar-sign"></i> Salary Range
+                                    </h6>
+                                    <p class="mb-0">
+                                        {% if job.salary_min and job.salary_max %}
+                                            <span class="fs-5 fw-bold text-success">
+                                                ${{ '{:,.0f}'.format(job.salary_min) }} - ${{ '{:,.0f}'.format(job.salary_max) }}
+                                            </span>
+                                        {% elif job.salary_min %}
+                                            <span class="fs-5 fw-bold text-success">
+                                                From ${{ '{:,.0f}'.format(job.salary_min) }}
+                                            </span>
+                                        {% elif job.salary_max %}
+                                            <span class="fs-5 fw-bold text-success">
+                                                Up to ${{ '{:,.0f}'.format(job.salary_max) }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">Not specified</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </form>
+                    
+                    <!-- Match Score -->
+                    <div class="alert 
+                        {% if job.match_score >= 70 %}alert-success
+                        {% elif job.match_score >= 40 %}alert-warning
+                        {% else %}alert-secondary{% endif %} 
+                        text-center">
+                        <strong>
+                            <i class="fas fa-chart-line"></i> Your Match Score:
+                        </strong>
+                        <span class="fs-3 fw-bold 
+                            {% if job.match_score >= 70 %}text-success
+                            {% elif job.match_score >= 40 %}text-warning
+                            {% else %}text-secondary{% endif %}">
+                            {{ job.match_score }}%
+                        </span>
+                        <div class="progress mt-2" style="height: 8px;">
+                            <div class="progress-bar 
+                                {% if job.match_score >= 70 %}bg-success
+                                {% elif job.match_score >= 40 %}bg-warning
+                                {% else %}bg-secondary{% endif %}" 
+                                style="width: {{ job.match_score }}%">
+                            </div>
+                        </div>
+                        <small class="text-muted mt-1 d-block">
+                            Based on your skills and job requirements
+                        </small>
+                    </div>
+                    
+                    <!-- Application Form -->
+                    <form method="POST">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Confirm Application</strong><br>
+                            By clicking submit, you confirm that you meet the requirements 
+                            and agree to apply for this position.
+                        </div>
+                        
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-paper-plane"></i> Submit Application
+                            </button>
+                            <a href="{{ url_for('recommendations') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Recommendations
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .card {
+        border-radius: 16px;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+    .progress {
+        border-radius: 10px;
+    }
+    .btn {
+        border-radius: 10px;
+        padding: 12px 24px;
+        font-weight: 600;
+    }
+    .btn-lg {
+        font-size: 1rem;
+    }
+    .alert {
+        border-radius: 12px;
+        border: none;
+    }
+    .text-success {
+        color: #28a745 !important;
+    }
+    .text-warning {
+        color: #ffc107 !important;
+    }
+    .text-secondary {
+        color: #6c757d !important;
+    }
+</style>
 {% endblock %}

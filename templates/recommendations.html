@@ -1,204 +1,264 @@
-{% extends "base.html" %}
+{% extends "layout.html" %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <form method="GET" class="row g-3 align-items-end">
-                    <div class="col-md-5">
-                        <label class="form-label fw-bold">Recommendation Strategy:</label>
-                        <select name="strategy" class="form-select" onchange="this.form.submit()">
-                            {% for key, name in strategies.items() %}
-                                <option value="{{ key }}" {% if current_strategy == key %}selected{% endif %}>
-                                    {{ name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                        <div class="form-text mt-1">
-                            {{ strategy_description }}
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold">Min Score (%):</label>
-                        <input type="range" name="min_score" value="{{ min_score }}" class="form-range" min="0" max="100" step="5" onchange="this.form.submit()">
-                        <div class="text-center">{{ min_score }}%</div>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold">Number of Jobs:</label>
-                        <input type="range" name="limit" value="{{ limit }}" class="form-range" min="5" max="50" step="5" onchange="this.form.submit()">
-                        <div class="text-center">{{ limit }} jobs</div>
-                    </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
-                    </div>
-                </form>
-            </div>
+<div class="container-fluid px-0">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-1">
+                <i class="fas fa-robot"></i> AI-Powered Job Recommendations
+            </h2>
+            <p class="text-muted">Machine Learning based recommendations tailored to your skills</p>
         </div>
     </div>
-</div>
 
-<div class="row mb-3">
-    <div class="col-md-8">
-        <div class="alert alert-info">
-            <strong>Current Strategy:</strong> {{ current_strategy_name }}<br>
-            <small>
-                {% if current_strategy == 'pure_skill' %}
-                    🎯 Jobs are ranked purely by how well your skills match
-                {% elif current_strategy == 'balanced' %}
-                    ⚖️ Balanced mix of skill match and what similar students liked
-                {% elif current_strategy == 'community' %}
-                    👥 Jobs that students with similar skills are applying to
-                {% elif current_strategy == 'trending' %}
-                    🔥 Most popular jobs right now across all students
-                {% endif %}
-            </small>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-light">
-            <div class="card-body text-center">
-                <h6>📊 Showing {{ recommendations|length }} jobs</h6>
-                <small class="text-muted">Minimum score: {{ min_score }}%</small>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    {% if recommendations %}
-        {% for job in recommendations %}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100 job-card" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#jobModal{{ job.job_id }}">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <h5 class="card-title">{{ job.title }}</h5>
-                            {% if job.recommendation_type %}
-                                <small class="badge bg-secondary">{{ job.recommendation_type }}</small>
-                            {% endif %}
+    <!-- Filters Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <form method="GET" class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-chart-pie"></i> Recommendation Strategy
+                            </label>
+                            <select name="strategy" class="form-select" onchange="this.form.submit()">
+                                {% for key, name in strategies.items() %}
+                                    <option value="{{ key }}" {% if current_strategy == key %}selected{% endif %}>
+                                        {{ name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text mt-1">
+                                {{ strategy_description }}
+                            </div>
                         </div>
-                        <h6 class="card-subtitle mb-2 text-muted">{{ job.company_name }} - {{ job.location }}</h6>
-                        
-                        <div class="mb-2">
-                            Match Score: 
-                            <span class="{% if job.match_score >= 70 %}match-score-high
-                                         {% elif job.match_score >= 40 %}match-score-medium
-                                         {% else %}match-score-low{% endif %}">
-                                {{ job.match_score }}%
-                            </span>
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-filter"></i> Min Score (%)
+                            </label>
+                            <input type="range" name="min_score" value="{{ min_score }}" class="form-range" 
+                                   min="0" max="100" step="5" onchange="this.form.submit()">
+                            <div class="text-center fw-bold">{{ min_score }}%</div>
                         </div>
-                        
-                        <p class="card-text">{{ job.description[:150] if job.description else 'No description' }}...</p>
-                        <p><strong>Min Experience:</strong> {{ job.min_experience or 0 }} years</p>
-                        
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <button class="btn btn-primary" onclick="event.stopPropagation(); window.location.href='{{ url_for('apply_to_job', job_id=job.job_id) }}'">
-                                📝 Apply Now
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-list"></i> Number of Jobs
+                            </label>
+                            <input type="range" name="limit" value="{{ limit }}" class="form-range" 
+                                   min="5" max="50" step="5" onchange="this.form.submit()">
+                            <div class="text-center fw-bold">{{ limit }} jobs</div>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-sync-alt"></i> Apply Filters
                             </button>
-                            <small class="text-muted">Click card for details →</small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Current Strategy</h6>
+                    <span class="badge bg-primary fs-6 p-2">
+                        <i class="fas fa-check-circle"></i> {{ current_strategy_name }}
+                    </span>
+                    <hr class="my-3">
+                    <small class="text-muted">
+                        {% if current_strategy == 'pure_skill' %}
+                            🎯 Jobs are ranked purely by how well your skills match
+                        {% elif current_strategy == 'balanced' %}
+                            ⚖️ Balanced mix of skill match and what similar students liked
+                        {% elif current_strategy == 'community' %}
+                            👥 Jobs that students with similar skills are applying to
+                        {% elif current_strategy == 'trending' %}
+                            🔥 Most popular jobs right now across all students
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations Grid -->
+    <div class="row">
+        {% if recommendations %}
+            {% for job in recommendations %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 job-card shadow-sm border-0" 
+                         style="cursor: pointer;" 
+                         data-bs-toggle="modal" 
+                         data-bs-target="#jobModal{{ job.job_id }}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title text-primary mb-0">{{ job.title }}</h5>
+                                {% if job.recommendation_type %}
+                                    <small class="badge bg-secondary">{{ job.recommendation_type }}</small>
+                                {% endif %}
+                            </div>
+                            <h6 class="card-subtitle mb-3 text-muted">
+                                <i class="fas fa-building"></i> {{ job.company_name }} - 
+                                <i class="fas fa-map-marker-alt"></i> {{ job.location }}
+                            </h6>
+                            
+                            <div class="mb-3">
+                                <span class="text-muted small">Match Score:</span>
+                                <span class="{% if job.match_score >= 70 %}match-score-high
+                                             {% elif job.match_score >= 40 %}match-score-medium
+                                             {% else %}match-score-low{% endif %}">
+                                    {{ job.match_score }}%
+                                </span>
+                            </div>
+                            
+                            <p class="card-text text-muted small">
+                                {{ job.description[:150] if job.description else 'No description' }}...
+                            </p>
+                            <p class="mb-2">
+                                <i class="fas fa-clock"></i> 
+                                <strong>Min Experience:</strong> {{ job.min_experience or 0 }} years
+                            </p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <button class="btn btn-primary btn-sm" 
+                                        onclick="event.stopPropagation(); window.location.href='{{ url_for('apply_to_job', job_id=job.job_id) }}'">
+                                    <i class="fas fa-paper-plane"></i> Apply Now
+                                </button>
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle"></i> Click card for details
+                                </small>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Job Details Modal -->
-            <div class="modal fade" id="jobModal{{ job.job_id }}" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title">{{ job.title }}</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <h6>🏢 Company</h6>
-                                    <p>{{ job.company_name }}</p>
-                                    
-                                    <h6>📍 Location</h6>
-                                    <p>{{ job.location }}</p>
-                                    
-                                    <h6>📝 Job Description</h6>
-                                    <p>{{ job.description }}</p>
-                                    
-                                    <h6>💼 Requirements</h6>
-                                    <ul>
-                                        <li>Minimum Experience: {{ job.min_experience or 0 }} years</li>
-                                        {% if job.salary_min or job.salary_max %}
-                                        <li>Salary Range: ${{ '{:,.0f}'.format(job.salary_min) if job.salary_min else '?' }} - ${{ '{:,.0f}'.format(job.salary_max) if job.salary_max else '?' }}</li>
-                                        {% endif %}
-                                    </ul>
-                                    
-                                    <h6>📊 Required Skills</h6>
-                                    <p>{{ job.required_skills or 'No specific skills listed' }}</p>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="card bg-light">
-                                        <div class="card-body">
-                                            <h6>🎯 Match Score</h6>
-                                            <h2 class="text-center 
-                                                {% if job.match_score >= 70 %}text-success
-                                                {% elif job.match_score >= 40 %}text-warning
-                                                {% else %}text-danger{% endif %}">
-                                                {{ job.match_score }}%
-                                            </h2>
-                                            <hr>
-                                            <h6>📊 Recommendation Type</h6>
-                                            <p class="text-center">
+                <!-- Job Details Modal -->
+                <div class="modal fade" id="jobModal{{ job.job_id }}" tabindex="-1">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-briefcase"></i> {{ job.title }}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-building"></i> Company
+                                        </h6>
+                                        <p>{{ job.company_name }}</p>
+                                        
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-map-marker-alt"></i> Location
+                                        </h6>
+                                        <p>{{ job.location }}</p>
+                                        
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-file-alt"></i> Job Description
+                                        </h6>
+                                        <p class="text-muted">{{ job.description }}</p>
+                                        
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-clipboard-list"></i> Requirements
+                                        </h6>
+                                        <ul>
+                                            <li>Minimum Experience: {{ job.min_experience or 0 }} years</li>
+                                            {% if job.salary_min or job.salary_max %}
+                                            <li>Salary Range: ${{ '{:,.0f}'.format(job.salary_min) if job.salary_min else '?' }} - ${{ '{:,.0f}'.format(job.salary_max) if job.salary_max else '?' }}</li>
+                                            {% endif %}
+                                        </ul>
+                                        
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-code"></i> Required Skills
+                                        </h6>
+                                        <p>{{ job.required_skills or 'No specific skills listed' }}</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-light border-0">
+                                            <div class="card-body text-center">
+                                                <h6 class="text-muted">🎯 Match Score</h6>
+                                                <h2 class="display-4 
+                                                    {% if job.match_score >= 70 %}text-success
+                                                    {% elif job.match_score >= 40 %}text-warning
+                                                    {% else %}text-danger{% endif %}">
+                                                    {{ job.match_score }}%
+                                                </h2>
+                                                <hr>
+                                                <h6 class="text-muted">📊 Recommendation Type</h6>
                                                 <span class="badge bg-primary">{{ job.recommendation_type or 'Skill Based' }}</span>
-                                            </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <a href="{{ url_for('apply_to_job', job_id=job.job_id) }}" class="btn btn-success">
-                                ✅ Apply Now
-                            </a>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times"></i> Close
+                                </button>
+                                <a href="{{ url_for('apply_to_job', job_id=job.job_id) }}" class="btn btn-success">
+                                    <i class="fas fa-paper-plane"></i> Apply Now
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
+            {% endfor %}
+        {% else %}
+            <div class="col">
+                <div class="alert alert-info text-center py-5">
+                    <i class="fas fa-folder-open fa-4x mb-3 opacity-50"></i>
+                    <h5>No recommendations found</h5>
+                    <p class="mb-3">Try adding more skills to your profile to get personalized job matches!</p>
+                    <a href="{{ url_for('manage_skills') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Manage Your Skills
+                    </a>
+                </div>
             </div>
-        {% endfor %}
-    {% else %}
-        <div class="col">
-            <div class="alert alert-info">
-                No recommendations found. Try adding more skills to your profile!
-                <br><br>
-                <a href="{{ url_for('manage_skills') }}" class="btn btn-primary">Manage Your Skills</a>
-            </div>
-        </div>
-    {% endif %}
+        {% endif %}
+    </div>
 </div>
 
 <style>
     .job-card {
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 12px;
     }
+    
     .job-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
     }
-    .match-score-high { color: #28a745; font-weight: bold; }
-    .match-score-medium { color: #ffc107; font-weight: bold; }
-    .match-score-low { color: #dc3545; }
     
-    /* Ensure dropdown shows full text */
-    select.form-select {
-        width: 100%;
-        min-width: 180px;
+    .match-score-high { 
+        color: #28a745; 
+        font-weight: bold; 
+        font-size: 1.1rem;
+    }
+    
+    .match-score-medium { 
+        color: #ffc107; 
+        font-weight: bold; 
+        font-size: 1.1rem;
+    }
+    
+    .match-score-low { 
+        color: #dc3545; 
+        font-weight: bold; 
+        font-size: 1.1rem;
+    }
+    
+    .display-4 {
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+    
+    @media (max-width: 768px) {
+        .display-4 {
+            font-size: 2rem;
+        }
     }
 </style>
-
-<script>
-    // Optional: Add tooltips to show full strategy names
-    const selectElement = document.querySelector('select[name="strategy"]');
-    if (selectElement) {
-        selectElement.addEventListener('mouseover', function() {
-            this.title = this.options[this.selectedIndex].text;
-        });
-    }
-</script>
 {% endblock %}

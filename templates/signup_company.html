@@ -1,67 +1,128 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                <h3>🏢 Company Sign Up</h3>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="company_name" class="form-label">Company Name *</label>
-                        <input type="text" class="form-control" id="company_name" name="company_name" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email *</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                        <small class="text-muted">This will be used for login</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password *</label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="password" name="password" required>
-                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                👁️ Show
-                            </button>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white text-center py-3">
+                    <i class="fas fa-building fa-2x mb-2"></i>
+                    <h3 class="mb-0">Company Sign Up</h3>
+                    <p class="mb-0 mt-1 small opacity-75">Create your company account</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <!-- Company Name -->
+                        <div class="mb-3">
+                            <label for="company_name" class="form-label fw-semibold">
+                                <i class="fas fa-building text-success"></i> Company Name <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-building"></i>
+                                </span>
+                                <input type="text" class="form-control" id="company_name" name="company_name" 
+                                       placeholder="Enter your company name" required>
+                            </div>
                         </div>
-                        <small class="text-muted">Minimum 4 characters</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="confirm_password" class="form-label">Confirm Password *</label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
-                            <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
-                                👁️ Show
-                            </button>
+                        
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-semibold">
+                                <i class="fas fa-envelope text-success"></i> Email <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       placeholder="company@example.com" required>
+                            </div>
+                            <small class="text-muted">This will be used for login</small>
                         </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="industry" class="form-label">Industry</label>
-                        <input type="text" class="form-control" id="industry" name="industry" 
-                               placeholder="e.g., IT Services, Healthcare, Finance">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="location" class="form-label">Location</label>
-                        <input type="text" class="form-control" id="location" name="location" 
-                               placeholder="e.g., New York, London, Remote">
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <small>After signing up, you can post jobs and find the best candidates!</small>
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success">Create Company Account</button>
-                        <a href="{{ url_for('signup') }}" class="btn btn-secondary">Back</a>
-                    </div>
-                </form>
+                        
+                        <!-- Password -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label fw-semibold">
+                                <i class="fas fa-lock text-success"></i> Password <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-key"></i>
+                                </span>
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       placeholder="Enter password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i> Show
+                                </button>
+                            </div>
+                            <small class="text-muted">Minimum 4 characters</small>
+                        </div>
+                        
+                        <!-- Confirm Password -->
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label fw-semibold">
+                                <i class="fas fa-check-circle text-success"></i> Confirm Password <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                       placeholder="Confirm your password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                    <i class="fas fa-eye"></i> Show
+                                </button>
+                            </div>
+                            <div id="passwordMatchMsg" class="mt-1"></div>
+                        </div>
+                        
+                        <!-- Industry -->
+                        <div class="mb-3">
+                            <label for="industry" class="form-label fw-semibold">
+                                <i class="fas fa-industry text-success"></i> Industry
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-industry"></i>
+                                </span>
+                                <input type="text" class="form-control" id="industry" name="industry" 
+                                       placeholder="e.g., IT Services, Healthcare, Finance">
+                            </div>
+                        </div>
+                        
+                        <!-- Location -->
+                        <div class="mb-3">
+                            <label for="location" class="form-label fw-semibold">
+                                <i class="fas fa-map-marker-alt text-success"></i> Location
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </span>
+                                <input type="text" class="form-control" id="location" name="location" 
+                                       placeholder="e.g., New York, London, Remote">
+                            </div>
+                        </div>
+                        
+                        <!-- Info Alert -->
+                        <div class="alert alert-info py-2">
+                            <i class="fas fa-info-circle"></i>
+                            <small>After signing up, you can post jobs and find the best candidates!</small>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-user-plus"></i> Create Company Account
+                            </button>
+                            <a href="{{ url_for('signup') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -75,7 +136,14 @@
     togglePassword.addEventListener('click', function() {
         const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
         password.setAttribute('type', type);
-        this.textContent = type === 'password' ? '👁️ Show' : '🙈 Hide';
+        const icon = this.querySelector('i');
+        if (type === 'password') {
+            icon.className = 'fas fa-eye';
+            this.innerHTML = '<i class="fas fa-eye"></i> Show';
+        } else {
+            icon.className = 'fas fa-eye-slash';
+            this.innerHTML = '<i class="fas fa-eye-slash"></i> Hide';
+        }
     });
     
     // Toggle for Confirm Password
@@ -85,7 +153,66 @@
     toggleConfirmPassword.addEventListener('click', function() {
         const type = confirmPassword.getAttribute('type') === 'password' ? 'text' : 'password';
         confirmPassword.setAttribute('type', type);
-        this.textContent = type === 'password' ? '👁️ Show' : '🙈 Hide';
+        const icon = this.querySelector('i');
+        if (type === 'password') {
+            icon.className = 'fas fa-eye';
+            this.innerHTML = '<i class="fas fa-eye"></i> Show';
+        } else {
+            icon.className = 'fas fa-eye-slash';
+            this.innerHTML = '<i class="fas fa-eye-slash"></i> Hide';
+        }
     });
+    
+    // Real-time password match check
+    const passwordField = document.getElementById('password');
+    const confirmField = document.getElementById('confirm_password');
+    const matchMsg = document.getElementById('passwordMatchMsg');
+    
+    function checkPasswordMatch() {
+        const pass = passwordField.value;
+        const confirm = confirmField.value;
+        
+        if (confirm.length === 0) {
+            matchMsg.innerHTML = '';
+        } else if (pass === confirm) {
+            matchMsg.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> Passwords match!</small>';
+        } else {
+            matchMsg.innerHTML = '<small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Passwords do not match!</small>';
+        }
+    }
+    
+    passwordField.addEventListener('keyup', checkPasswordMatch);
+    confirmField.addEventListener('keyup', checkPasswordMatch);
 </script>
+
+<style>
+    .card {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .input-group-text {
+        border-radius: 10px 0 0 10px;
+        min-width: 40px;
+        justify-content: center;
+    }
+    .form-control {
+        border-radius: 0;
+    }
+    .input-group .form-control:last-child,
+    .input-group .btn:last-child {
+        border-radius: 0 10px 10px 0;
+    }
+    .btn {
+        border-radius: 10px;
+        font-weight: 500;
+    }
+    .btn-lg {
+        padding: 12px;
+        font-size: 1rem;
+    }
+    .alert {
+        border-radius: 10px;
+        border: none;
+    }
+</style>
 {% endblock %}

@@ -1,10 +1,25 @@
 # recommendation_engine.py
+"""
+Original Recommendation Engine (Fallback)
+Provides basic skill-based matching and database operations
+"""
+
 import mysql.connector
 from db_config import get_db_connection
 
+
+# ==================== JOB RECOMMENDATIONS ====================
+
 def get_job_recommendations(user_id, min_match_score=0):
     """
-    Returns ranked job recommendations for a user
+    Returns ranked job recommendations based on skill matching
+    
+    Args:
+        user_id: Student's user ID
+        min_match_score: Minimum match score threshold
+    
+    Returns:
+        List of jobs with match scores
     """
     conn = get_db_connection()
     if not conn:
@@ -13,24 +28,24 @@ def get_job_recommendations(user_id, min_match_score=0):
     cursor = conn.cursor(dictionary=True)
     
     query = """
-    SELECT 
-        j.job_id,
-        j.title,
-        j.description,
-        j.min_experience,
-        j.salary_min,
-        j.salary_max,
-        c.company_name,
-        c.location,
-        COALESCE(SUM(us.proficiency_level * js.importance_weight), 0) AS match_score
-    FROM Jobs j
-    JOIN Companies c ON j.company_id = c.company_id
-    LEFT JOIN Job_Skills js ON j.job_id = js.job_id
-    LEFT JOIN User_Skills us ON js.skill_id = us.skill_id AND us.user_id = %s
-    GROUP BY j.job_id, j.title, j.description, j.min_experience, 
-             j.salary_min, j.salary_max, c.company_name, c.location
-    HAVING match_score >= %s
-    ORDER BY match_score DESC
+        SELECT 
+            j.job_id,
+            j.title,
+            j.description,
+            j.min_experience,
+            j.salary_min,
+            j.salary_max,
+            c.company_name,
+            c.location,
+            COALESCE(SUM(us.proficiency_level * js.importance_weight), 0) AS match_score
+        FROM Jobs j
+        JOIN Companies c ON j.company_id = c.company_id
+        LEFT JOIN Job_Skills js ON j.job_id = js.job_id
+        LEFT JOIN User_Skills us ON js.skill_id = us.skill_id AND us.user_id = %s
+        GROUP BY j.job_id, j.title, j.description, j.min_experience, 
+                 j.salary_min, j.salary_max, c.company_name, c.location
+        HAVING match_score >= %s
+        ORDER BY match_score DESC
     """
     
     cursor.execute(query, (user_id, min_match_score))
@@ -41,8 +56,19 @@ def get_job_recommendations(user_id, min_match_score=0):
     
     return results
 
+
+# ==================== USER PROFILE ====================
+
 def get_user_profile(user_id):
-    """Get user details and skills"""
+    """
+    Get user details and their skills
+    
+    Args:
+        user_id: Student's user ID
+    
+    Returns:
+        Dictionary with 'user' and 'skills' keys
+    """
     conn = get_db_connection()
     if not conn:
         return {"user": None, "skills": []}
@@ -67,8 +93,20 @@ def get_user_profile(user_id):
     
     return {"user": user, "skills": skills}
 
+
+# ==================== JOB APPLICATIONS ====================
+
 def apply_for_job(user_id, job_id):
-    """Submit job application"""
+    """
+    Submit a job application
+    
+    Args:
+        user_id: Student's user ID
+        job_id: Job ID to apply for
+    
+    Returns:
+        Tuple of (success: bool, message: str)
+    """
     conn = get_db_connection()
     if not conn:
         return False, "Database connection failed"
@@ -100,8 +138,11 @@ def apply_for_job(user_id, job_id):
         cursor.close()
         conn.close()
 
+
+# ==================== JOB MANAGEMENT ====================
+
 def get_all_jobs():
-    """Get all jobs for company view"""
+    """Get all jobs with company details"""
     conn = get_db_connection()
     if not conn:
         return []
@@ -118,8 +159,9 @@ def get_all_jobs():
     conn.close()
     return jobs
 
+
 def get_job_details(job_id):
-    """Get detailed job information"""
+    """Get detailed information for a specific job"""
     conn = get_db_connection()
     if not conn:
         return None
@@ -136,8 +178,49 @@ def get_job_details(job_id):
     conn.close()
     return job
 
+
+# ==================== COMPANY MANAGEMENT ====================
+
+def get_company_jobs(company_id):
+    """
+    Get all jobs for a specific company with applicant counts
+    
+    Args:
+        company_id: Company's ID
+    
+    Returns:
+        List of jobs with applicant_count
+    """
+    conn = get_db_connection()
+    if not conn:
+        return []
+    
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT j.*, 
+               (SELECT COUNT(*) FROM Applications WHERE job_id = j.job_id) as applicant_count
+        FROM Jobs j
+        WHERE j.company_id = %s
+        ORDER BY j.job_id DESC
+    """, (company_id,))
+    jobs = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jobs
+
+
+# ==================== APPLICATION MANAGEMENT ====================
+
 def get_user_applications(user_id):
-    """Get all applications for a user"""
+    """
+    Get all applications for a user with job details
+    
+    Args:
+        user_id: Student's user ID
+    
+    Returns:
+        List of applications with job and company info
+    """
     conn = get_db_connection()
     if not conn:
         return []
@@ -156,27 +239,17 @@ def get_user_applications(user_id):
     conn.close()
     return applications
 
-def get_company_jobs(company_id):
-    """Get all jobs for a company"""
-    conn = get_db_connection()
-    if not conn:
-        return []
-    
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT j.*, 
-               (SELECT COUNT(*) FROM Applications WHERE job_id = j.job_id) as applicant_count
-        FROM Jobs j
-        WHERE j.company_id = %s
-        ORDER BY j.job_id DESC
-    """, (company_id,))
-    jobs = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return jobs
 
 def get_job_applicants(job_id):
-    """Get all applicants for a specific job with match scores"""
+    """
+    Get all applicants for a job with their match scores
+    
+    Args:
+        job_id: Job ID
+    
+    Returns:
+        List of applicants with match scores
+    """
     conn = get_db_connection()
     if not conn:
         return []
@@ -209,8 +282,18 @@ def get_job_applicants(job_id):
     conn.close()
     return applicants
 
+
 def update_application_status(application_id, status):
-    """Update application status (for company use)"""
+    """
+    Update application status (for company use)
+    
+    Args:
+        application_id: Application ID
+        status: New status ('accepted', 'rejected', etc.)
+    
+    Returns:
+        Boolean indicating success
+    """
     conn = get_db_connection()
     if not conn:
         return False

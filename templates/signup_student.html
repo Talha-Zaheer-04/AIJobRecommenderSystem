@@ -1,74 +1,142 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h3>🎓 Student Sign Up</h3>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Full Name *</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email *</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                        <small class="text-muted">This will be used for login</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password *</label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="password" name="password" required>
-                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                👁️ Show
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <i class="fas fa-graduation-cap fa-2x mb-2"></i>
+                    <h3 class="mb-0">Student Sign Up</h3>
+                    <p class="mb-0 mt-1 small opacity-75">Create your student account</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <!-- Full Name -->
+                        <div class="mb-3">
+                            <label for="name" class="form-label fw-semibold">
+                                <i class="fas fa-user text-primary"></i> Full Name <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       placeholder="Enter your full name" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-semibold">
+                                <i class="fas fa-envelope text-primary"></i> Email <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       placeholder="student@example.com" required>
+                            </div>
+                            <small class="text-muted">This will be used for login</small>
+                        </div>
+                        
+                        <!-- Password -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label fw-semibold">
+                                <i class="fas fa-lock text-primary"></i> Password <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-key"></i>
+                                </span>
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       placeholder="Enter password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i> Show
+                                </button>
+                            </div>
+                            <small class="text-muted">Minimum 4 characters</small>
+                        </div>
+                        
+                        <!-- Confirm Password -->
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label fw-semibold">
+                                <i class="fas fa-check-circle text-primary"></i> Confirm Password <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                       placeholder="Confirm your password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                    <i class="fas fa-eye"></i> Show
+                                </button>
+                            </div>
+                            <div id="passwordMatchMsg" class="mt-1"></div>
+                        </div>
+                        
+                        <!-- Degree -->
+                        <div class="mb-3">
+                            <label for="degree" class="form-label fw-semibold">
+                                <i class="fas fa-diploma text-primary"></i> Degree
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </span>
+                                <input type="text" class="form-control" id="degree" name="degree" 
+                                       placeholder="e.g., Computer Science, Data Science">
+                            </div>
+                        </div>
+                        
+                        <!-- CGPA & Graduation Year -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="cgpa" class="form-label fw-semibold">
+                                    <i class="fas fa-star text-primary"></i> CGPA
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-chart-line"></i>
+                                    </span>
+                                    <input type="number" step="0.01" class="form-control" id="cgpa" name="cgpa" 
+                                           placeholder="0.00 - 4.00" min="0" max="4">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="graduation_year" class="form-label fw-semibold">
+                                    <i class="fas fa-calendar text-primary"></i> Graduation Year
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-calendar"></i>
+                                    </span>
+                                    <input type="number" class="form-control" id="graduation_year" name="graduation_year" 
+                                           placeholder="e.g., 2025" min="2020" max="2030">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Info Alert -->
+                        <div class="alert alert-info py-2">
+                            <i class="fas fa-info-circle"></i>
+                            <small>After signing up, you can add skills to your profile and get job recommendations!</small>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus"></i> Create Student Account
                             </button>
+                            <a href="{{ url_for('signup') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
                         </div>
-                        <small class="text-muted">Minimum 4 characters</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="confirm_password" class="form-label">Confirm Password *</label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
-                            <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
-                                👁️ Show
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="degree" class="form-label">Degree</label>
-                        <input type="text" class="form-control" id="degree" name="degree" 
-                               placeholder="e.g., Computer Science, Data Science">
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="cgpa" class="form-label">CGPA</label>
-                            <input type="number" step="0.01" class="form-control" id="cgpa" name="cgpa" 
-                                   placeholder="0.00 - 4.00" min="0" max="4">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="graduation_year" class="form-label">Graduation Year</label>
-                            <input type="number" class="form-control" id="graduation_year" name="graduation_year" 
-                                   placeholder="e.g., 2025" min="2020" max="2030">
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <small>After signing up, you can add skills to your profile and get job recommendations!</small>
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Create Student Account</button>
-                        <a href="{{ url_for('signup') }}" class="btn btn-secondary">Back</a>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -82,7 +150,14 @@
     togglePassword.addEventListener('click', function() {
         const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
         password.setAttribute('type', type);
-        this.textContent = type === 'password' ? '👁️ Show' : '🙈 Hide';
+        const icon = this.querySelector('i');
+        if (type === 'password') {
+            icon.className = 'fas fa-eye';
+            this.innerHTML = '<i class="fas fa-eye"></i> Show';
+        } else {
+            icon.className = 'fas fa-eye-slash';
+            this.innerHTML = '<i class="fas fa-eye-slash"></i> Hide';
+        }
     });
     
     // Toggle for Confirm Password
@@ -92,7 +167,66 @@
     toggleConfirmPassword.addEventListener('click', function() {
         const type = confirmPassword.getAttribute('type') === 'password' ? 'text' : 'password';
         confirmPassword.setAttribute('type', type);
-        this.textContent = type === 'password' ? '👁️ Show' : '🙈 Hide';
+        const icon = this.querySelector('i');
+        if (type === 'password') {
+            icon.className = 'fas fa-eye';
+            this.innerHTML = '<i class="fas fa-eye"></i> Show';
+        } else {
+            icon.className = 'fas fa-eye-slash';
+            this.innerHTML = '<i class="fas fa-eye-slash"></i> Hide';
+        }
     });
+    
+    // Real-time password match check
+    const passwordField = document.getElementById('password');
+    const confirmField = document.getElementById('confirm_password');
+    const matchMsg = document.getElementById('passwordMatchMsg');
+    
+    function checkPasswordMatch() {
+        const pass = passwordField.value;
+        const confirm = confirmField.value;
+        
+        if (confirm.length === 0) {
+            matchMsg.innerHTML = '';
+        } else if (pass === confirm) {
+            matchMsg.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> Passwords match!</small>';
+        } else {
+            matchMsg.innerHTML = '<small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Passwords do not match!</small>';
+        }
+    }
+    
+    passwordField.addEventListener('keyup', checkPasswordMatch);
+    confirmField.addEventListener('keyup', checkPasswordMatch);
 </script>
+
+<style>
+    .card {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .input-group-text {
+        border-radius: 10px 0 0 10px;
+        min-width: 40px;
+        justify-content: center;
+    }
+    .form-control {
+        border-radius: 0;
+    }
+    .input-group .form-control:last-child,
+    .input-group .btn:last-child {
+        border-radius: 0 10px 10px 0;
+    }
+    .btn {
+        border-radius: 10px;
+        font-weight: 500;
+    }
+    .btn-lg {
+        padding: 12px;
+        font-size: 1rem;
+    }
+    .alert {
+        border-radius: 10px;
+        border: none;
+    }
+</style>
 {% endblock %}

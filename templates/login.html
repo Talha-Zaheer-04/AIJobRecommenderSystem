@@ -1,45 +1,87 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h3 class="text-center">Login</h3>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email address</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <i class="fas fa-lock fa-2x mb-2"></i>
+                        <h3 class="mb-0">Welcome Back</h3>
+                        <p class="mb-0 mt-1 small opacity-75">Login to your account</p>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="password" name="password" required>
-                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                👁️ Show
-                            </button>
+                    <div class="card-body p-4">
+                        <form method="POST">
+                            <!-- Email -->
+                            <div class="mb-3">
+                                <label for="email" class="form-label fw-semibold">
+                                    <i class="fas fa-envelope text-primary"></i> Email Address
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           placeholder="student@example.com" required>
+                                </div>
+                            </div>
+                            
+                            <!-- Password -->
+                            <div class="mb-3">
+                                <label for="password" class="form-label fw-semibold">
+                                    <i class="fas fa-lock text-primary"></i> Password
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-key"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="password" name="password" 
+                                           placeholder="Enter your password" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="fas fa-eye"></i> Show
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- User Type -->
+                            <div class="mb-4">
+                                <label for="user_type" class="form-label fw-semibold">
+                                    <i class="fas fa-user-tag text-primary"></i> Login as
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-users"></i>
+                                    </span>
+                                    <select class="form-select" id="user_type" name="user_type" required>
+                                        <option value="student">🎓 Student</option>
+                                        <option value="company">🏢 Company</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Login Button -->
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-sign-in-alt"></i> Login
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Sign Up Link -->
+                        <div class="text-center">
+                            <p class="mb-0">
+                                Don't have an account? 
+                                <a href="{{ url_for('signup') }}" class="fw-semibold text-primary">
+                                    <i class="fas fa-user-plus"></i> Sign Up here
+                                </a>
+                            </p>
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="user_type" class="form-label">Login as</label>
-                        <select class="form-select" id="user_type" name="user_type" required>
-                            <option value="student">Student</option>
-                            <option value="company">Company</option>
-                        </select>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Login</button>
-                    </div>
-                </form>
-                <hr>
-                <p class="text-center mb-0">
-                    Don't have an account? <a href="{{ url_for('signup') }}">Sign Up here</a>
-                </p>
+                </div>
             </div>
         </div>
     </div>
@@ -50,12 +92,75 @@
     const password = document.getElementById('password');
     
     togglePassword.addEventListener('click', function() {
-        // Toggle the type attribute
         const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
         password.setAttribute('type', type);
-        
-        // Toggle the button text
-        this.textContent = type === 'password' ? '👁️ Show' : '🙈 Hide';
+        const icon = this.querySelector('i');
+        if (type === 'password') {
+            icon.className = 'fas fa-eye';
+            this.innerHTML = '<i class="fas fa-eye"></i> Show';
+        } else {
+            icon.className = 'fas fa-eye-slash';
+            this.innerHTML = '<i class="fas fa-eye-slash"></i> Hide';
+        }
     });
 </script>
+
+<style>
+    .auth-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    .card {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    }
+    
+    .input-group-text {
+        border-radius: 10px 0 0 10px;
+        min-width: 42px;
+        justify-content: center;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 0;
+    }
+    
+    .input-group .form-control:last-child,
+    .input-group .form-select:last-child,
+    .input-group .btn:last-child {
+        border-radius: 0 10px 10px 0;
+    }
+    
+    .btn {
+        border-radius: 10px;
+        font-weight: 500;
+        padding: 12px;
+    }
+    
+    .btn-lg {
+        font-size: 1rem;
+    }
+    
+    hr {
+        margin: 1.5rem 0;
+    }
+    
+    @media (max-width: 768px) {
+        .auth-container {
+            padding: 1rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem !important;
+        }
+    }
+</style>
 {% endblock %}

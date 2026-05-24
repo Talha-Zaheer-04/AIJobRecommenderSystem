@@ -1,83 +1,176 @@
-{% extends "base.html" %}
+{% extends "layout.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-warning">
-                <h3>✏️ Edit Job: {{ job.title }}</h3>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Job Title *</label>
-                        <input type="text" class="form-control" id="title" name="title" value="{{ job.title }}" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description *</label>
-                        <textarea class="form-control" id="description" name="description" rows="5" required>{{ job.description }}</textarea>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="min_experience" class="form-label">Min Experience (years)</label>
-                            <input type="number" class="form-control" id="min_experience" name="min_experience" value="{{ job.min_experience or 0 }}">
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning text-white text-center py-3">
+                    <h3 class="mb-0">
+                        <i class="fas fa-edit"></i> Edit Job: {{ job.title }}
+                    </h3>
+                    <p class="mb-0 mt-1 small opacity-75">Update your job posting details</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <!-- Job Title -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label fw-semibold">
+                                <i class="fas fa-tag text-primary"></i> Job Title <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-briefcase"></i>
+                                </span>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       value="{{ job.title }}" required placeholder="e.g., Senior Python Developer">
+                            </div>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="salary_min" class="form-label">Min Salary ($)</label>
-                            <input type="number" class="form-control" id="salary_min" name="salary_min" value="{{ job.salary_min or '' }}">
+                        
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label fw-semibold">
+                                <i class="fas fa-file-alt text-primary"></i> Description <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="description" name="description" 
+                                      rows="5" required placeholder="Describe the job responsibilities, requirements, and benefits...">{{ job.description }}</textarea>
+                            <small class="text-muted">Provide a clear and detailed job description</small>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="salary_max" class="form-label">Max Salary ($)</label>
-                            <input type="number" class="form-control" id="salary_max" name="salary_max" value="{{ job.salary_max or '' }}">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Required Skills</label>
-                        <div id="skills-container">
-                            {% for skill in job_skills %}
-                            <div class="row mb-2 skill-row">
-                                <div class="col-md-7">
-                                    <input type="text" name="skills" class="form-control" value="{{ skill.skill_name }}" placeholder="Skill name">
-                                </div>
-                                <div class="col-md-4">
-                                    <input type="number" name="importance_weights" class="form-control" value="{{ skill.importance_weight }}" placeholder="Importance (1-5)" min="1" max="5">
-                                </div>
-                                <div class="col-md-1">
-                                    <button type="button" class="btn btn-danger remove-skill">✖</button>
+                        
+                        <!-- Experience & Salary -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label for="min_experience" class="form-label fw-semibold">
+                                    <i class="fas fa-clock text-primary"></i> Min Experience
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="min_experience" 
+                                           name="min_experience" value="{{ job.min_experience or 0 }}" min="0">
+                                    <span class="input-group-text">years</span>
                                 </div>
                             </div>
-                            {% endfor %}
+                            <div class="col-md-4">
+                                <label for="salary_min" class="form-label fw-semibold">
+                                    <i class="fas fa-dollar-sign text-primary"></i> Min Salary
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="salary_min" 
+                                           name="salary_min" value="{{ job.salary_min or '' }}" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="salary_max" class="form-label fw-semibold">
+                                    <i class="fas fa-dollar-sign text-primary"></i> Max Salary
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="salary_max" 
+                                           name="salary_max" value="{{ job.salary_max or '' }}" min="0">
+                                </div>
+                            </div>
                         </div>
-                        <button type="button" id="add-skill" class="btn btn-sm btn-secondary">+ Add Another Skill</button>
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-warning">Update Job</button>
-                        <a href="{{ url_for('company_jobs') }}" class="btn btn-secondary">Cancel</a>
-                    </div>
-                </form>
+                        
+                        <!-- Required Skills -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-code text-primary"></i> Required Skills
+                            </label>
+                            <div id="skills-container" class="border rounded p-3 bg-light">
+                                {% if job_skills %}
+                                    {% for skill in job_skills %}
+                                    <div class="row mb-2 skill-row align-items-center">
+                                        <div class="col-md-7">
+                                            <input type="text" name="skills" class="form-control form-control-sm" 
+                                                   value="{{ skill.skill_name }}" placeholder="Skill name">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select name="importance_weights" class="form-select form-select-sm">
+                                                <option value="1" {% if skill.importance_weight == 1 %}selected{% endif %}>1 - Low Importance</option>
+                                                <option value="2" {% if skill.importance_weight == 2 %}selected{% endif %}>2 - Basic</option>
+                                                <option value="3" {% if skill.importance_weight == 3 %}selected{% endif %}>3 - Medium</option>
+                                                <option value="4" {% if skill.importance_weight == 4 %}selected{% endif %}>4 - High</option>
+                                                <option value="5" {% if skill.importance_weight == 5 %}selected{% endif %}>5 - Critical</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <button type="button" class="btn btn-danger btn-sm remove-skill w-100">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="row mb-2 skill-row align-items-center">
+                                        <div class="col-md-7">
+                                            <input type="text" name="skills" class="form-control form-control-sm" 
+                                                   placeholder="e.g., Python">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select name="importance_weights" class="form-select form-select-sm">
+                                                <option value="1">1 - Low Importance</option>
+                                                <option value="2">2 - Basic</option>
+                                                <option value="3" selected>3 - Medium</option>
+                                                <option value="4">4 - High</option>
+                                                <option value="5">5 - Critical</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <button type="button" class="btn btn-danger btn-sm remove-skill w-100">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <button type="button" id="add-skill" class="btn btn-sm btn-outline-primary mt-2">
+                                <i class="fas fa-plus"></i> Add Another Skill
+                            </button>
+                            <small class="text-muted d-block mt-1">Add skills required for this job (importance level 1-5)</small>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="fas fa-save"></i> Update Job
+                            </button>
+                            <a href="{{ url_for('company_jobs') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // Add new skill row
     document.getElementById('add-skill').addEventListener('click', function() {
         const container = document.getElementById('skills-container');
         const newRow = document.createElement('div');
-        newRow.className = 'row mb-2 skill-row';
+        newRow.className = 'row mb-2 skill-row align-items-center';
         newRow.innerHTML = `
             <div class="col-md-7">
-                <input type="text" name="skills" class="form-control" placeholder="Skill name">
+                <input type="text" name="skills" class="form-control form-control-sm" placeholder="e.g., Python">
             </div>
             <div class="col-md-4">
-                <input type="number" name="importance_weights" class="form-control" placeholder="Importance (1-5)" min="1" max="5">
+                <select name="importance_weights" class="form-select form-select-sm">
+                    <option value="1">1 - Low Importance</option>
+                    <option value="2">2 - Basic</option>
+                    <option value="3" selected>3 - Medium</option>
+                    <option value="4">4 - High</option>
+                    <option value="5">5 - Critical</option>
+                </select>
             </div>
             <div class="col-md-1">
-                <button type="button" class="btn btn-danger remove-skill">✖</button>
+                <button type="button" class="btn btn-danger btn-sm remove-skill w-100">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         `;
         container.appendChild(newRow);
@@ -87,10 +180,49 @@
         });
     });
     
+    // Remove skill row
     document.querySelectorAll('.remove-skill').forEach(btn => {
         btn.addEventListener('click', function() {
             this.closest('.skill-row').remove();
         });
     });
 </script>
+
+<style>
+    .card {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .input-group-text {
+        border-radius: 10px 0 0 10px;
+    }
+    .form-control, .form-select {
+        border-radius: 0;
+    }
+    .form-control:first-child, .form-select:first-child {
+        border-radius: 0;
+    }
+    .input-group .form-control:last-child, .input-group .form-select:last-child {
+        border-radius: 0 10px 10px 0;
+    }
+    .btn {
+        border-radius: 10px;
+        font-weight: 500;
+    }
+    .btn-lg {
+        padding: 12px;
+        font-size: 1rem;
+    }
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+    .skill-row {
+        transition: background-color 0.2s ease;
+        padding: 5px;
+        border-radius: 8px;
+    }
+    .skill-row:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+</style>
 {% endblock %}

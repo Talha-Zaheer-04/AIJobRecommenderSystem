@@ -1,45 +1,120 @@
-{% extends "base.html" %}
+{% extends "layout.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-warning">
-                <h3>✏️ Edit Company Profile</h3>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="company_name" class="form-label">Company Name *</label>
-                        <input type="text" class="form-control" id="company_name" name="company_name" 
-                               value="{{ company.company_name }}" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email *</label>
-                        <input type="email" class="form-control" id="email" name="email" 
-                               value="{{ company.email }}" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="industry" class="form-label">Industry</label>
-                        <input type="text" class="form-control" id="industry" name="industry" 
-                               value="{{ company.industry or '' }}">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="location" class="form-label">Location</label>
-                        <input type="text" class="form-control" id="location" name="location" 
-                               value="{{ company.location or '' }}">
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-warning">Save Changes</button>
-                        <a href="{{ url_for('company_profile') }}" class="btn btn-secondary">Cancel</a>
-                    </div>
-                </form>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning text-white text-center py-3">
+                    <h3 class="mb-0">
+                        <i class="fas fa-edit"></i> Edit Company Profile
+                    </h3>
+                    <p class="mb-0 mt-1 small opacity-75">Update your company information</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <!-- Company Name -->
+                        <div class="mb-3">
+                            <label for="company_name" class="form-label fw-semibold">
+                                <i class="fas fa-building text-primary"></i> Company Name <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-building"></i>
+                                </span>
+                                <input type="text" class="form-control" id="company_name" name="company_name" 
+                                       value="{{ company.company_name }}" required placeholder="Enter company name">
+                            </div>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-semibold">
+                                <i class="fas fa-envelope text-primary"></i> Email <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ company.email }}" required placeholder="company@example.com">
+                            </div>
+                            <small class="text-muted">This email will be used for login</small>
+                        </div>
+                        
+                        <!-- Industry -->
+                        <div class="mb-3">
+                            <label for="industry" class="form-label fw-semibold">
+                                <i class="fas fa-industry text-primary"></i> Industry
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-industry"></i>
+                                </span>
+                                <input type="text" class="form-control" id="industry" name="industry" 
+                                       value="{{ company.industry or '' }}" placeholder="e.g., IT Services, Healthcare, Finance">
+                            </div>
+                        </div>
+                        
+                        <!-- Location -->
+                        <div class="mb-4">
+                            <label for="location" class="form-label fw-semibold">
+                                <i class="fas fa-map-marker-alt text-primary"></i> Location
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </span>
+                                <input type="text" class="form-control" id="location" name="location" 
+                                       value="{{ company.location or '' }}" placeholder="e.g., New York, London, Remote">
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <hr class="my-4">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <a href="{{ url_for('company_profile') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .card {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .input-group-text {
+        border-radius: 10px 0 0 10px;
+        min-width: 40px;
+        justify-content: center;
+    }
+    .form-control {
+        border-radius: 0;
+    }
+    .form-control:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    }
+    .btn {
+        border-radius: 10px;
+        font-weight: 500;
+        padding: 12px;
+    }
+    .btn-lg {
+        font-size: 1rem;
+    }
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+</style>
 {% endblock %}

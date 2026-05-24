@@ -1,45 +1,159 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-primary text-white text-center">
-                <h3>📝 Create New Account</h3>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-6">
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <div style="font-size: 60px;">🎓</div>
-                                <h4>Student Account</h4>
-                                <p>For students looking for job opportunities</p>
-                                <a href="{{ url_for('signup_student') }}" class="btn btn-primary">
-                                    Sign Up as Student
-                                </a>
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <i class="fas fa-user-plus fa-2x mb-2"></i>
+                        <h3 class="mb-0">Create New Account</h3>
+                        <p class="mb-0 mt-1 opacity-75">Join our platform to find jobs or hire talent</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <!-- Student Account Option -->
+                            <div class="col-md-6 mb-4 mb-md-0">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body text-center p-4">
+                                        <div class="mb-3">
+                                            <i class="fas fa-graduation-cap fa-4x text-primary"></i>
+                                        </div>
+                                        <h4 class="mb-2">Student Account</h4>
+                                        <p class="text-muted mb-3">For students looking for job opportunities</p>
+                                        <ul class="list-unstyled text-start mb-4">
+                                            <li class="mb-2">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                Personalized job recommendations
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                Track your applications
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                Build your skill profile
+                                            </li>
+                                        </ul>
+                                        <a href="{{ url_for('signup_student') }}" class="btn btn-primary w-100">
+                                            Sign Up as Student
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Company Account Option -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body text-center p-4">
+                                        <div class="mb-3">
+                                            <i class="fas fa-building fa-4x text-success"></i>
+                                        </div>
+                                        <h4 class="mb-2">Company Account</h4>
+                                        <p class="text-muted mb-3">For recruiters posting jobs</p>
+                                        <ul class="list-unstyled text-start mb-4">
+                                            <li class="mb-2">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                Post job openings
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                Review applications
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                Find the best candidates
+                                            </li>
+                                        </ul>
+                                        <a href="{{ url_for('signup_company') }}" class="btn btn-success w-100">
+                                            Sign Up as Company
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <div style="font-size: 60px;">🏢</div>
-                                <h4>Company Account</h4>
-                                <p>For recruiters posting jobs</p>
-                                <a href="{{ url_for('signup_company') }}" class="btn btn-success">
-                                    Sign Up as Company
+                        
+                        <hr class="my-4">
+                        
+                        <div class="text-center">
+                            <p class="mb-0">
+                                Already have an account? 
+                                <a href="{{ url_for('login') }}" class="fw-semibold text-primary">
+                                    Login here
                                 </a>
-                            </div>
+                            </p>
                         </div>
                     </div>
                 </div>
-                <hr>
-                <p class="text-center mb-0">
-                    Already have an account? <a href="{{ url_for('login') }}">Login here</a>
-                </p>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .auth-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    .card {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    }
+    
+    .card-body .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card-body .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .btn {
+        border-radius: 10px;
+        padding: 12px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    .list-unstyled li {
+        font-size: 0.9rem;
+        color: #555;
+    }
+    
+    hr {
+        margin: 1.5rem 0;
+    }
+    
+    @media (max-width: 768px) {
+        .auth-container {
+            padding: 1rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem !important;
+        }
+        
+        .list-unstyled li {
+            font-size: 0.8rem;
+        }
+        
+        .fa-4x {
+            font-size: 2.5rem !important;
+        }
+    }
+</style>
 {% endblock %}

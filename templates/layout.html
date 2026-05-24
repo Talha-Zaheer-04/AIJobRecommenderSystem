@@ -1,0 +1,166 @@
+<!-- templates/layout.html - Main Layout with Collapsible Sidebar -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Job Recommendation System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <a href="{{ url_for('dashboard') if session.user_type == 'student' else url_for('company_jobs') }}">
+                    <span style="font-size: 1.5rem;">🎯</span>
+                    <span>AI Job Recommender</span>
+                </a>
+            </div>
+            
+            <div class="sidebar-header">
+                <div class="sidebar-avatar">
+                    {% if session.user_type == 'student' %}
+                        🧑‍🎓
+                    {% else %}
+                        🏢
+                    {% endif %}
+                </div>
+                <h4 class="mb-0">{{ session.user_name if session.user_type == 'student' else session.company_name }}</h4>
+                <small>{{ session.user_email if session.user_type == 'student' else session.company_email }}</small>
+            </div>
+            
+            <div class="sidebar-nav">
+                {% if session.user_type == 'student' %}
+                    <a href="{{ url_for('dashboard') }}" class="sidebar-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{{ url_for('manage_skills') }}" class="sidebar-nav-item {% if request.endpoint == 'manage_skills' %}active{% endif %}">
+                        <i class="fas fa-code"></i>
+                        <span>Manage Skills</span>
+                    </a>
+                    <a href="{{ url_for('recommendations') }}" class="sidebar-nav-item {% if request.endpoint == 'recommendations' %}active{% endif %}">
+                        <i class="fas fa-robot"></i>
+                        <span>Recommendations</span>
+                    </a>
+                    <a href="{{ url_for('applications') }}" class="sidebar-nav-item {% if request.endpoint == 'applications' %}active{% endif %}">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>My Applications</span>
+                    </a>
+                    <div class="sidebar-divider"></div>
+                    <a href="{{ url_for('edit_student_profile') }}" class="sidebar-nav-item">
+                        <i class="fas fa-user-edit"></i>
+                        <span>Edit Profile</span>
+                    </a>
+                    <a href="{{ url_for('change_student_password') }}" class="sidebar-nav-item">
+                        <i class="fas fa-key"></i>
+                        <span>Change Password</span>
+                    </a>
+                {% elif session.user_type == 'company' %}
+                    <a href="{{ url_for('company_profile') }}" class="sidebar-nav-item {% if request.endpoint == 'company_profile' %}active{% endif %}">
+                        <i class="fas fa-building"></i>
+                        <span>Company Profile</span>
+                    </a>
+                    <a href="{{ url_for('company_jobs') }}" class="sidebar-nav-item {% if request.endpoint == 'company_jobs' %}active{% endif %}">
+                        <i class="fas fa-briefcase"></i>
+                        <span>My Jobs</span>
+                    </a>
+                    <a href="{{ url_for('post_job') }}" class="sidebar-nav-item {% if request.endpoint == 'post_job' %}active{% endif %}">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Post Job</span>
+                    </a>
+                    <div class="sidebar-divider"></div>
+                    <a href="{{ url_for('edit_company_profile') }}" class="sidebar-nav-item">
+                        <i class="fas fa-user-edit"></i>
+                        <span>Edit Profile</span>
+                    </a>
+                    <a href="{{ url_for('change_company_password') }}" class="sidebar-nav-item">
+                        <i class="fas fa-key"></i>
+                        <span>Change Password</span>
+                    </a>
+                {% endif %}
+            </div>
+            
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="sidebar-nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Toggle Button -->
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <div class="content-container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar Toggle Functionality
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const icon = toggleBtn.querySelector('i');
+        
+        // Load saved state from localStorage
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed) {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('expanded');
+            icon.classList.remove('fa-chevron-left');
+            icon.classList.add('fa-chevron-right');
+        }
+        
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            
+            // Save state
+            const collapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', collapsed);
+            
+            // Change icon
+            if (collapsed) {
+                icon.classList.remove('fa-chevron-left');
+                icon.classList.add('fa-chevron-right');
+            } else {
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-chevron-left');
+            }
+        });
+        
+        // Mobile sidebar handling
+        if (window.innerWidth <= 768) {
+            sidebar.classList.remove('collapsed');
+            mainContent.classList.remove('expanded');
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

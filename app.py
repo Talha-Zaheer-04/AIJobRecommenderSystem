@@ -1,13 +1,29 @@
-# app.py - Final Clean Version
+# app.py - Cleaned and Optimized Version
+"""
+AI Job Recommendation System - Main Flask Application
+"""
+
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from db_config import get_db_connection
 from recommendation_engine import get_user_profile, apply_for_job
-from ml_integration import get_recommendations, get_recommendation_methods, refresh_ml_models
-from ml_integration import get_recommendation_strategies, get_strategy_description
+from ml_integration import get_recommendations, get_recommendation_strategies, get_strategy_description
 import mysql.connector
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
+
+
+# ==================== HELPER FUNCTIONS ====================
+
+def get_applications_count(user_id):
+    """Get total applications count for a student"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT COUNT(*) as total FROM Applications WHERE user_id = %s", (user_id,))
+    count = cursor.fetchone()['total']
+    cursor.close()
+    conn.close()
+    return count
 
 
 # ==================== ML INTEGRATION ROUTES ====================
@@ -18,62 +34,25 @@ def recommendations():
     if session.get('user_type') != 'student':
         return redirect(url_for('login'))
     
-    # Get parameters
     min_score = request.args.get('min_score', 0, type=int)
-    strategy = request.args.get('strategy', 'pure_skill')  # Changed from 'method' to 'strategy'
+    strategy = request.args.get('strategy', 'pure_skill')
     limit = request.args.get('limit', 10, type=int)
     
-    # Get ML recommendations with selected strategy
     ml_recs = get_recommendations(session['user_id'], strategy=strategy, limit=limit)
     
-    # Filter by minimum score if needed
     if min_score > 0:
         ml_recs = [r for r in ml_recs if r.get('match_score', 0) >= min_score]
     
-    # Get available strategies for dropdown
     strategies = get_recommendation_strategies()
-    current_strategy_name = strategies.get(strategy, 'Skill Based')
-    strategy_description = get_strategy_description(strategy)
     
-    return render_template('recommendations.html', 
-                         recommendations=ml_recs, 
+    return render_template('recommendations.html',
+                         recommendations=ml_recs,
                          min_score=min_score,
                          current_strategy=strategy,
-                         current_strategy_name=current_strategy_name,
-                         strategy_description=strategy_description,
+                         current_strategy_name=strategies.get(strategy, 'Skill Based'),
+                         strategy_description=get_strategy_description(strategy),
                          strategies=strategies,
                          limit=limit)
-
-@app.route('/recommendations/compare')
-def compare_recommendations():
-    """Compare different recommendation methods side by side"""
-    if session.get('user_type') != 'student':
-        return redirect(url_for('login'))
-    
-    user_id = session['user_id']
-    
-    # Get recommendations from different strategies
-    skill_recs = get_recommendations(user_id, strategy='pure_skill', limit=10)
-    balanced_recs = get_recommendations(user_id, strategy='balanced', limit=10)
-    community_recs = get_recommendations(user_id, strategy='community', limit=10)
-    trending_recs = get_recommendations(user_id, strategy='trending', limit=10)
-    
-    return render_template('compare_recommendations.html',
-                         skill_recs=skill_recs,
-                         balanced_recs=balanced_recs,
-                         community_recs=community_recs,
-                         trending_recs=trending_recs)
-
-@app.route('/recommendations/refresh')
-def refresh_recommendations():
-    """Force refresh ML models"""
-    if session.get('user_type') != 'student':
-        flash('Access denied', 'error')
-        return redirect(url_for('login'))
-    
-    result = refresh_ml_models()
-    flash(result['message'], 'success')
-    return redirect(url_for('recommendations'))
 
 
 # ==================== PUBLIC ROUTES ====================
@@ -96,39 +75,39 @@ def login():
             cursor.execute("SELECT * FROM Users WHERE email = %s", (email,))
             user = cursor.fetchone()
             if user and user['password'] == password:
-                session['user_id'] = user['user_id']
-                session['user_name'] = user['name']
-                session['user_type'] = 'student'
+                session.update({
+                    'user_id': user['user_id'],
+                    'user_name': user['name'],
+                    'user_email': user['email'],
+                    'user_type': 'student'
+                })
                 cursor.close()
                 conn.close()
-                flash(f'Welcome back, {user["name"]}!', 'success')
                 return redirect(url_for('dashboard'))
-            else:
-                flash('Invalid email or password!', 'error')
         
         elif user_type == 'company':
             cursor.execute("SELECT * FROM Companies WHERE email = %s", (email,))
             company = cursor.fetchone()
             if company and company['password'] == password:
-                session['company_id'] = company['company_id']
-                session['company_name'] = company['company_name']
-                session['user_type'] = 'company'
+                session.update({
+                    'company_id': company['company_id'],
+                    'company_name': company['company_name'],
+                    'company_email': company['email'],
+                    'user_type': 'company'
+                })
                 cursor.close()
                 conn.close()
-                flash(f'Welcome back, {company["company_name"]}!', 'success')
                 return redirect(url_for('company_jobs'))
-            else:
-                flash('Invalid email or password!', 'error')
         
         cursor.close()
         conn.close()
+        flash('Invalid email or password!', 'error')
     
     return render_template('login.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('Logged out successfully', 'success')
     return redirect(url_for('index'))
 
 
@@ -136,22 +115,17 @@ def logout():
 
 @app.route('/signup')
 def signup():
-    """Show sign up page"""
     return render_template('signup.html')
 
 @app.route('/signup/student', methods=['GET', 'POST'])
 def signup_student():
-    """Student sign up"""
     if request.method == 'POST':
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
         confirm_password = request.form['confirm_password']
-        degree = request.form.get('degree', '')
-        cgpa = request.form.get('cgpa')
-        graduation_year = request.form.get('graduation_year')
         
-        if not name or not email or not password:
+        if not all([name, email, password]):
             flash('Name, email and password are required!', 'error')
             return redirect(url_for('signup_student'))
         
@@ -170,13 +144,15 @@ def signup_student():
             cursor.execute("""
                 INSERT INTO Users (name, email, password, degree, cgpa, graduation_year)
                 VALUES (%s, %s, %s, %s, %s, %s)
-            """, (name, email, password, degree, cgpa, graduation_year))
+            """, (name, email, password,
+                  request.form.get('degree', ''),
+                  request.form.get('cgpa'),
+                  request.form.get('graduation_year')))
             conn.commit()
             flash('Account created successfully! Please login.', 'success')
             return redirect(url_for('login'))
         except mysql.connector.IntegrityError:
-            flash('Email already exists! Please use a different email.', 'error')
-            return redirect(url_for('signup_student'))
+            flash('Email already exists!', 'error')
         finally:
             cursor.close()
             conn.close()
@@ -185,16 +161,13 @@ def signup_student():
 
 @app.route('/signup/company', methods=['GET', 'POST'])
 def signup_company():
-    """Company sign up"""
     if request.method == 'POST':
         company_name = request.form['company_name']
         email = request.form['email']
         password = request.form['password']
         confirm_password = request.form['confirm_password']
-        industry = request.form.get('industry', '')
-        location = request.form.get('location', '')
         
-        if not company_name or not email or not password:
+        if not all([company_name, email, password]):
             flash('Company name, email and password are required!', 'error')
             return redirect(url_for('signup_company'))
         
@@ -213,13 +186,14 @@ def signup_company():
             cursor.execute("""
                 INSERT INTO Companies (company_name, email, password, industry, location)
                 VALUES (%s, %s, %s, %s, %s)
-            """, (company_name, email, password, industry, location))
+            """, (company_name, email, password,
+                  request.form.get('industry', ''),
+                  request.form.get('location', '')))
             conn.commit()
-            flash('Company account created successfully! Please login.', 'success')
+            flash('Company account created successfully!', 'success')
             return redirect(url_for('login'))
         except mysql.connector.IntegrityError:
-            flash('Email already exists! Please use a different email.', 'error')
-            return redirect(url_for('signup_company'))
+            flash('Email already exists!', 'error')
         finally:
             cursor.close()
             conn.close()
@@ -239,6 +213,7 @@ def dashboard():
         flash('Profile not found', 'error')
         return redirect(url_for('logout'))
     
+    profile['applications_count'] = get_applications_count(session['user_id'])
     return render_template('dashboard.html', profile=profile)
 
 @app.route('/apply/<int:job_id>', methods=['GET', 'POST'])
@@ -295,6 +270,43 @@ def applications():
     return render_template('applications.html', applications=applications)
 
 
+# ==================== CANCEL APPLICATION ====================
+
+@app.route('/cancel_application/<int:application_id>', methods=['POST'])
+def cancel_application(application_id):
+    """Student cancels/withdraws their job application"""
+    if session.get('user_type') != 'student':
+        flash('Access denied', 'error')
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute("""
+        SELECT * FROM Applications 
+        WHERE application_id = %s AND user_id = %s
+    """, (application_id, session['user_id']))
+    application = cursor.fetchone()
+    
+    if not application:
+        flash('Application not found', 'error')
+        return redirect(url_for('applications'))
+    
+    if application['status'] != 'pending':
+        flash('You can only cancel pending applications!', 'error')
+        return redirect(url_for('applications'))
+    
+    cursor.execute("""
+        UPDATE Applications SET status = 'cancelled' WHERE application_id = %s
+    """, (application_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    
+    flash('Application cancelled successfully!', 'success')
+    return redirect(url_for('applications'))
+
+
 # ==================== STUDENT PROFILE EDITING ====================
 
 @app.route('/student/edit_profile', methods=['GET', 'POST'])
@@ -308,9 +320,6 @@ def edit_student_profile():
     if request.method == 'POST':
         name = request.form['name']
         email = request.form['email']
-        degree = request.form.get('degree', '')
-        cgpa = request.form.get('cgpa')
-        graduation_year = request.form.get('graduation_year')
         
         if not name or not email:
             flash('Name and email are required!', 'error')
@@ -321,14 +330,17 @@ def edit_student_profile():
                 UPDATE Users 
                 SET name = %s, email = %s, degree = %s, cgpa = %s, graduation_year = %s
                 WHERE user_id = %s
-            """, (name, email, degree, cgpa, graduation_year, session['user_id']))
+            """, (name, email,
+                  request.form.get('degree', ''),
+                  request.form.get('cgpa'),
+                  request.form.get('graduation_year'),
+                  session['user_id']))
             conn.commit()
-            session['user_name'] = name
+            session.update({'user_name': name, 'user_email': email})
             flash('Profile updated successfully!', 'success')
             return redirect(url_for('dashboard'))
         except mysql.connector.IntegrityError:
             flash('Email already exists!', 'error')
-            return redirect(url_for('edit_student_profile'))
         finally:
             cursor.close()
             conn.close()
@@ -346,9 +358,9 @@ def change_student_password():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        current_password = request.form['current_password']
-        new_password = request.form['new_password']
-        confirm_password = request.form['confirm_password']
+        current = request.form['current_password']
+        new_pass = request.form['new_password']
+        confirm = request.form['confirm_password']
         
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -356,27 +368,25 @@ def change_student_password():
         cursor.execute("SELECT password FROM Users WHERE user_id = %s", (session['user_id'],))
         user = cursor.fetchone()
         
-        if user['password'] != current_password:
+        if user['password'] != current:
             flash('Current password is incorrect!', 'error')
-            return redirect(url_for('change_student_password'))
-        
-        if new_password != confirm_password:
+        elif new_pass != confirm:
             flash('New passwords do not match!', 'error')
-            return redirect(url_for('change_student_password'))
-        
-        if len(new_password) < 4:
+        elif len(new_pass) < 4:
             flash('Password must be at least 4 characters long!', 'error')
-            return redirect(url_for('change_student_password'))
+        else:
+            cursor.execute("UPDATE Users SET password = %s WHERE user_id = %s", (new_pass, session['user_id']))
+            conn.commit()
+            flash('Password changed successfully!', 'success')
+            return redirect(url_for('dashboard'))
         
-        cursor.execute("UPDATE Users SET password = %s WHERE user_id = %s", (new_password, session['user_id']))
-        conn.commit()
         cursor.close()
         conn.close()
-        
-        flash('Password changed successfully!', 'success')
-        return redirect(url_for('dashboard'))
     
     return render_template('change_password.html', user_type='student')
+
+
+# ==================== COMPANY ROUTES ====================
 
 @app.route('/company/change_password', methods=['GET', 'POST'])
 def change_company_password():
@@ -384,9 +394,9 @@ def change_company_password():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        current_password = request.form['current_password']
-        new_password = request.form['new_password']
-        confirm_password = request.form['confirm_password']
+        current = request.form['current_password']
+        new_pass = request.form['new_password']
+        confirm = request.form['confirm_password']
         
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -394,194 +404,22 @@ def change_company_password():
         cursor.execute("SELECT password FROM Companies WHERE company_id = %s", (session['company_id'],))
         company = cursor.fetchone()
         
-        if company['password'] != current_password:
+        if company['password'] != current:
             flash('Current password is incorrect!', 'error')
-            return redirect(url_for('change_company_password'))
-        
-        if new_password != confirm_password:
+        elif new_pass != confirm:
             flash('New passwords do not match!', 'error')
-            return redirect(url_for('change_company_password'))
-        
-        if len(new_password) < 4:
+        elif len(new_pass) < 4:
             flash('Password must be at least 4 characters long!', 'error')
-            return redirect(url_for('change_company_password'))
+        else:
+            cursor.execute("UPDATE Companies SET password = %s WHERE company_id = %s", (new_pass, session['company_id']))
+            conn.commit()
+            flash('Password changed successfully!', 'success')
+            return redirect(url_for('company_profile'))
         
-        cursor.execute("UPDATE Companies SET password = %s WHERE company_id = %s", (new_password, session['company_id']))
-        conn.commit()
         cursor.close()
         conn.close()
-        
-        flash('Password changed successfully!', 'success')
-        return redirect(url_for('company_profile'))
     
     return render_template('change_password.html', user_type='company')
-
-
-# ==================== STUDENT SKILL MANAGEMENT ====================
-
-@app.route('/manage_skills')
-def manage_skills():
-    if session.get('user_type') != 'student':
-        return redirect(url_for('login'))
-    
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    
-    cursor.execute("""
-        SELECT s.skill_id, s.skill_name, s.category, 
-               us.proficiency_level, us.years_experience
-        FROM User_Skills us
-        JOIN Skills s ON us.skill_id = s.skill_id
-        WHERE us.user_id = %s
-        ORDER BY s.skill_name
-    """, (session['user_id'],))
-    user_skills = cursor.fetchall()
-    
-    cursor.execute("""
-        SELECT s.skill_id, s.skill_name, s.category
-        FROM Skills s
-        WHERE s.skill_id NOT IN (
-            SELECT skill_id FROM User_Skills WHERE user_id = %s
-        )
-        ORDER BY s.skill_name
-    """, (session['user_id'],))
-    available_skills = cursor.fetchall()
-    
-    cursor.close()
-    conn.close()
-    
-    return render_template('manage_skills.html', 
-                         user_skills=user_skills, 
-                         available_skills=available_skills)
-
-@app.route('/add_skill', methods=['POST'])
-def add_skill():
-    if session.get('user_type') != 'student':
-        return redirect(url_for('login'))
-    
-    skill_id = request.form.get('skill_id')
-    proficiency_level = request.form.get('proficiency_level', 3)
-    years_experience = request.form.get('years_experience', 0)
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    try:
-        cursor.execute("""
-            INSERT INTO User_Skills (user_id, skill_id, proficiency_level, years_experience)
-            VALUES (%s, %s, %s, %s)
-        """, (session['user_id'], skill_id, proficiency_level, years_experience))
-        conn.commit()
-        flash('Skill added successfully!', 'success')
-    except mysql.connector.IntegrityError:
-        flash('You already have this skill!', 'error')
-    finally:
-        cursor.close()
-        conn.close()
-    
-    return redirect(url_for('manage_skills'))
-
-@app.route('/update_skill/<int:skill_id>', methods=['POST'])
-def update_skill(skill_id):
-    if session.get('user_type') != 'student':
-        return redirect(url_for('login'))
-    
-    proficiency_level = request.form.get('proficiency_level')
-    years_experience = request.form.get('years_experience')
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("""
-        UPDATE User_Skills 
-        SET proficiency_level = %s, years_experience = %s
-        WHERE user_id = %s AND skill_id = %s
-    """, (proficiency_level, years_experience, session['user_id'], skill_id))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    
-    flash('Skill updated successfully!', 'success')
-    return redirect(url_for('manage_skills'))
-
-@app.route('/remove_skill/<int:skill_id>', methods=['POST'])
-def remove_skill(skill_id):
-    if session.get('user_type') != 'student':
-        return redirect(url_for('login'))
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("""
-        DELETE FROM User_Skills 
-        WHERE user_id = %s AND skill_id = %s
-    """, (session['user_id'], skill_id))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    
-    flash('Skill removed successfully!', 'success')
-    return redirect(url_for('manage_skills'))
-
-@app.route('/add_new_skill', methods=['POST'])
-def add_new_skill():
-    if session.get('user_type') != 'student':
-        return redirect(url_for('login'))
-    
-    skill_name = request.form.get('skill_name')
-    category = request.form.get('category', 'General')
-    proficiency_level = request.form.get('proficiency_level', 3)
-    years_experience = request.form.get('years_experience', 0)
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    try:
-        cursor.execute("""
-            INSERT INTO Skills (skill_name, category)
-            VALUES (%s, %s)
-            ON DUPLICATE KEY UPDATE skill_id=LAST_INSERT_ID(skill_id)
-        """, (skill_name, category))
-        
-        skill_id = cursor.lastrowid
-        
-        cursor.execute("""
-            INSERT INTO User_Skills (user_id, skill_id, proficiency_level, years_experience)
-            VALUES (%s, %s, %s, %s)
-        """, (session['user_id'], skill_id, proficiency_level, years_experience))
-        
-        conn.commit()
-        flash(f'Skill "{skill_name}" added successfully!', 'success')
-    except mysql.connector.IntegrityError:
-        flash('You already have this skill!', 'error')
-    finally:
-        cursor.close()
-        conn.close()
-    
-    return redirect(url_for('manage_skills'))
-
-@app.route('/get_job_skills/<int:job_id>')
-def get_job_skills(job_id):
-    """API endpoint to get job skills for modal"""
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    
-    cursor.execute("""
-        SELECT s.skill_name, js.importance_weight
-        FROM Job_Skills js
-        JOIN Skills s ON js.skill_id = s.skill_id
-        WHERE js.job_id = %s
-        ORDER BY js.importance_weight DESC
-    """, (job_id,))
-    skills = cursor.fetchall()
-    
-    cursor.close()
-    conn.close()
-    
-    return {"skills": skills}
-
-
-# ==================== COMPANY ROUTES ====================
 
 @app.route('/company/profile')
 def company_profile():
@@ -607,9 +445,9 @@ def company_profile():
     cursor.close()
     conn.close()
     
-    return render_template('company_profile.html', 
-                         company=company, 
-                         jobs_count=jobs_count, 
+    return render_template('company_profile.html',
+                         company=company,
+                         jobs_count=jobs_count,
                          applications_count=applications_count)
 
 @app.route('/company_jobs')
@@ -620,9 +458,12 @@ def company_jobs():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
+    cursor.execute("SELECT * FROM Companies WHERE company_id = %s", (session['company_id'],))
+    company = cursor.fetchone()
+    
     cursor.execute("""
         SELECT j.*, 
-               (SELECT COUNT(*) FROM Applications WHERE job_id = j.job_id) as applicant_count
+               (SELECT COUNT(*) FROM Applications WHERE job_id = j.job_id AND status != 'cancelled') as applicant_count
         FROM Jobs j
         WHERE j.company_id = %s
         ORDER BY j.job_id DESC
@@ -635,17 +476,18 @@ def company_jobs():
     cursor.execute("""
         SELECT COUNT(*) as total FROM Applications a
         JOIN Jobs j ON a.job_id = j.job_id
-        WHERE j.company_id = %s
+        WHERE j.company_id = %s AND a.status != 'cancelled'
     """, (session['company_id'],))
     applications_count = cursor.fetchone()['total']
     
     cursor.close()
     conn.close()
     
-    return render_template('company_jobs.html', 
-                         jobs=jobs, 
-                         jobs_count=jobs_count, 
-                         applications_count=applications_count)
+    return render_template('company_jobs.html',
+                         jobs=jobs,
+                         jobs_count=jobs_count,
+                         applications_count=applications_count,
+                         company=company)
 
 @app.route('/company/edit_profile', methods=['GET', 'POST'])
 def edit_company_profile():
@@ -656,21 +498,22 @@ def edit_company_profile():
     cursor = conn.cursor(dictionary=True)
     
     if request.method == 'POST':
-        company_name = request.form['company_name']
-        industry = request.form['industry']
-        location = request.form['location']
-        email = request.form['email']
-        
         cursor.execute("""
             UPDATE Companies 
             SET company_name = %s, industry = %s, location = %s, email = %s
             WHERE company_id = %s
-        """, (company_name, industry, location, email, session['company_id']))
+        """, (request.form['company_name'],
+              request.form['industry'],
+              request.form['location'],
+              request.form['email'],
+              session['company_id']))
         conn.commit()
-        session['company_name'] = company_name
+        session.update({
+            'company_name': request.form['company_name'],
+            'company_email': request.form['email']
+        })
         cursor.close()
         conn.close()
-        
         flash('Company profile updated successfully!', 'success')
         return redirect(url_for('company_profile'))
     
@@ -687,26 +530,22 @@ def post_job():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        title = request.form['title']
-        description = request.form['description']
-        min_experience = request.form.get('min_experience', 0)
-        salary_min = request.form.get('salary_min')
-        salary_max = request.form.get('salary_max')
-        
         conn = get_db_connection()
         cursor = conn.cursor()
         
         cursor.execute("""
             INSERT INTO Jobs (company_id, title, description, min_experience, salary_min, salary_max)
             VALUES (%s, %s, %s, %s, %s, %s)
-        """, (session['company_id'], title, description, min_experience, salary_min, salary_max))
+        """, (session['company_id'],
+              request.form['title'],
+              request.form['description'],
+              request.form.get('min_experience', 0),
+              request.form.get('salary_min'),
+              request.form.get('salary_max')))
         
         job_id = cursor.lastrowid
         
-        skills = request.form.getlist('skills')
-        importance_weights = request.form.getlist('importance_weights')
-        
-        for skill_name, weight in zip(skills, importance_weights):
+        for skill_name, weight in zip(request.form.getlist('skills'), request.form.getlist('importance_weights')):
             if skill_name and weight:
                 cursor.execute("SELECT skill_id FROM Skills WHERE skill_name = %s", (skill_name,))
                 skill = cursor.fetchone()
@@ -717,8 +556,7 @@ def post_job():
                     skill_id = cursor.lastrowid
                 
                 cursor.execute("""
-                    INSERT INTO Job_Skills (job_id, skill_id, importance_weight)
-                    VALUES (%s, %s, %s)
+                    INSERT INTO Job_Skills (job_id, skill_id, importance_weight) VALUES (%s, %s, %s)
                 """, (job_id, skill_id, weight))
         
         conn.commit()
@@ -739,8 +577,7 @@ def edit_job(job_id):
     cursor = conn.cursor(dictionary=True)
     
     cursor.execute("""
-        SELECT * FROM Jobs 
-        WHERE job_id = %s AND company_id = %s
+        SELECT * FROM Jobs WHERE job_id = %s AND company_id = %s
     """, (job_id, session['company_id']))
     job = cursor.fetchone()
     
@@ -749,26 +586,21 @@ def edit_job(job_id):
         return redirect(url_for('company_jobs'))
     
     if request.method == 'POST':
-        title = request.form['title']
-        description = request.form['description']
-        min_experience = request.form.get('min_experience', 0)
-        salary_min = request.form.get('salary_min')
-        salary_max = request.form.get('salary_max')
-        
         cursor.execute("""
             UPDATE Jobs 
-            SET title = %s, description = %s, 
-                min_experience = %s, salary_min = %s, salary_max = %s
+            SET title = %s, description = %s, min_experience = %s, salary_min = %s, salary_max = %s
             WHERE job_id = %s AND company_id = %s
-        """, (title, description, min_experience, salary_min, salary_max, job_id, session['company_id']))
+        """, (request.form['title'],
+              request.form['description'],
+              request.form.get('min_experience', 0),
+              request.form.get('salary_min'),
+              request.form.get('salary_max'),
+              job_id, session['company_id']))
         conn.commit()
         
         cursor.execute("DELETE FROM Job_Skills WHERE job_id = %s", (job_id,))
         
-        skills = request.form.getlist('skills')
-        importance_weights = request.form.getlist('importance_weights')
-        
-        for skill_name, weight in zip(skills, importance_weights):
+        for skill_name, weight in zip(request.form.getlist('skills'), request.form.getlist('importance_weights')):
             if skill_name and weight:
                 cursor.execute("SELECT skill_id FROM Skills WHERE skill_name = %s", (skill_name,))
                 skill = cursor.fetchone()
@@ -779,14 +611,12 @@ def edit_job(job_id):
                     skill_id = cursor.lastrowid
                 
                 cursor.execute("""
-                    INSERT INTO Job_Skills (job_id, skill_id, importance_weight)
-                    VALUES (%s, %s, %s)
+                    INSERT INTO Job_Skills (job_id, skill_id, importance_weight) VALUES (%s, %s, %s)
                 """, (job_id, skill_id, weight))
         
         conn.commit()
         cursor.close()
         conn.close()
-        
         flash('Job updated successfully!', 'success')
         return redirect(url_for('company_jobs'))
     
@@ -797,7 +627,6 @@ def edit_job(job_id):
         WHERE js.job_id = %s
     """, (job_id,))
     job_skills = cursor.fetchall()
-    
     cursor.close()
     conn.close()
     
@@ -821,7 +650,6 @@ def delete_job(job_id):
     cursor.execute("DELETE FROM Job_Skills WHERE job_id = %s", (job_id,))
     cursor.execute("DELETE FROM Applications WHERE job_id = %s", (job_id,))
     cursor.execute("DELETE FROM Jobs WHERE job_id = %s", (job_id,))
-    
     conn.commit()
     cursor.close()
     conn.close()
@@ -852,7 +680,7 @@ def view_applicants(job_id):
     cursor.execute("""
         SELECT DISTINCT
             u.user_id, u.name, u.email, u.degree, u.cgpa, u.graduation_year,
-            a.status, a.applied_date,
+            a.status, a.applied_date, a.application_id,
             COALESCE(
                 (SELECT SUM(us2.proficiency_level * js2.importance_weight)
                  FROM User_Skills us2
@@ -862,11 +690,10 @@ def view_applicants(job_id):
             ) as match_score
         FROM Applications a
         JOIN Users u ON a.user_id = u.user_id
-        WHERE a.job_id = %s
+        WHERE a.job_id = %s AND a.status != 'cancelled'
         ORDER BY match_score DESC
     """, (job_id, job_id))
     applicants = cursor.fetchall()
-    
     cursor.close()
     conn.close()
     
@@ -882,7 +709,7 @@ def update_application_status():
     job_id = request.form.get('job_id')
     status = request.form.get('status')
     
-    if not user_id or not job_id or not status:
+    if not all([user_id, job_id, status]):
         flash('Missing required information', 'error')
         return redirect(url_for('company_jobs'))
     
@@ -893,26 +720,176 @@ def update_application_status():
     job = cursor.fetchone()
     
     if not job or job['company_id'] != session['company_id']:
-        flash('You do not have permission to update this application', 'error')
-        cursor.close()
-        conn.close()
+        flash('Permission denied', 'error')
         return redirect(url_for('company_jobs'))
     
     try:
         cursor.execute("""
-            UPDATE Applications 
-            SET status = %s 
-            WHERE user_id = %s AND job_id = %s
+            UPDATE Applications SET status = %s WHERE user_id = %s AND job_id = %s
         """, (status, user_id, job_id))
         conn.commit()
         flash(f'Application {status} successfully!', 'success')
     except Exception as e:
-        flash(f'Error updating application: {str(e)}', 'error')
+        flash(f'Error: {str(e)}', 'error')
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return redirect(url_for('view_applicants', job_id=job_id))
+
+
+# ==================== STUDENT SKILL MANAGEMENT ====================
+
+@app.route('/manage_skills')
+def manage_skills():
+    if session.get('user_type') != 'student':
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute("""
+        SELECT s.skill_id, s.skill_name, s.category, 
+               us.proficiency_level, us.years_experience
+        FROM User_Skills us
+        JOIN Skills s ON us.skill_id = s.skill_id
+        WHERE us.user_id = %s
+        ORDER BY s.skill_name
+    """, (session['user_id'],))
+    user_skills = cursor.fetchall()
+    
+    cursor.execute("""
+        SELECT s.skill_id, s.skill_name, s.category
+        FROM Skills s
+        WHERE s.skill_id NOT IN (SELECT skill_id FROM User_Skills WHERE user_id = %s)
+        ORDER BY s.skill_name
+    """, (session['user_id'],))
+    available_skills = cursor.fetchall()
     
     cursor.close()
     conn.close()
     
-    return redirect(url_for('view_applicants', job_id=job_id))
+    return render_template('manage_skills.html',
+                         user_skills=user_skills,
+                         available_skills=available_skills)
+
+@app.route('/add_skill', methods=['POST'])
+def add_skill():
+    if session.get('user_type') != 'student':
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            INSERT INTO User_Skills (user_id, skill_id, proficiency_level, years_experience)
+            VALUES (%s, %s, %s, %s)
+        """, (session['user_id'],
+              request.form.get('skill_id'),
+              request.form.get('proficiency_level', 3),
+              request.form.get('years_experience', 0)))
+        conn.commit()
+        flash('Skill added successfully!', 'success')
+    except mysql.connector.IntegrityError:
+        flash('You already have this skill!', 'error')
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return redirect(url_for('manage_skills'))
+
+@app.route('/update_skill/<int:skill_id>', methods=['POST'])
+def update_skill(skill_id):
+    if session.get('user_type') != 'student':
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        UPDATE User_Skills 
+        SET proficiency_level = %s, years_experience = %s
+        WHERE user_id = %s AND skill_id = %s
+    """, (request.form.get('proficiency_level'),
+          request.form.get('years_experience'),
+          session['user_id'], skill_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    
+    flash('Skill updated successfully!', 'success')
+    return redirect(url_for('manage_skills'))
+
+@app.route('/remove_skill/<int:skill_id>', methods=['POST'])
+def remove_skill(skill_id):
+    if session.get('user_type') != 'student':
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("DELETE FROM User_Skills WHERE user_id = %s AND skill_id = %s",
+                  (session['user_id'], skill_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    
+    flash('Skill removed successfully!', 'success')
+    return redirect(url_for('manage_skills'))
+
+@app.route('/add_new_skill', methods=['POST'])
+def add_new_skill():
+    if session.get('user_type') != 'student':
+        return redirect(url_for('login'))
+    
+    skill_name = request.form.get('skill_name')
+    category = request.form.get('category', 'General')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            INSERT INTO Skills (skill_name, category) VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE skill_id = LAST_INSERT_ID(skill_id)
+        """, (skill_name, category))
+        skill_id = cursor.lastrowid
+        
+        cursor.execute("""
+            INSERT INTO User_Skills (user_id, skill_id, proficiency_level, years_experience)
+            VALUES (%s, %s, %s, %s)
+        """, (session['user_id'], skill_id,
+              request.form.get('proficiency_level', 3),
+              request.form.get('years_experience', 0)))
+        conn.commit()
+        flash(f'Skill "{skill_name}" added successfully!', 'success')
+    except mysql.connector.IntegrityError:
+        flash('You already have this skill!', 'error')
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return redirect(url_for('manage_skills'))
+
+@app.route('/get_job_skills/<int:job_id>')
+def get_job_skills(job_id):
+    """API endpoint to get job skills for modal"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute("""
+        SELECT s.skill_name, js.importance_weight
+        FROM Job_Skills js
+        JOIN Skills s ON js.skill_id = s.skill_id
+        WHERE js.job_id = %s
+        ORDER BY js.importance_weight DESC
+    """, (job_id,))
+    skills = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    return {"skills": skills}
 
 
 # ==================== RUN APP ====================
