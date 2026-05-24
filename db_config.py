@@ -12,8 +12,8 @@ from mysql.connector import Error
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': '',           # Your MySQL password (leave empty if none)
-    'database': 'sem_proj'    # Your database name
+    'password': '',
+    'database': 'sem_proj'
 }
 
 
