@@ -217,11 +217,12 @@ Open your browser and navigate to: http://localhost:5000
 
 The system uses a hybrid recommendation engine with four configurable strategies:
 
-Strategy	Weight Distribution	                                Best For
-Skill Based	100% Skills	                                        Users who know exactly what they want
-Balanced	50% Skills + 30% Collaborative + 20% Popularity	    General recommendations
-Social	    30% Skills + 60% Collaborative + 10% Popularity	    Discovering similar opportunities
-Trending	20% Skills + 20% Collaborative + 60% Popularity	    Seeing popular jobs
+| Strategy	    | Weight Distribution	                            | Best For                              |
+|---------------|---------------------------------------------------|---------------------------------------|
+| Skill Based	| 100% Skills	                                    | Users who know exactly what they want |
+| Balanced	    | 50% Skills + 30% Collaborative + 20% Popularity	| General recommendations               |
+| Social	    | 30% Skills + 60% Collaborative + 10% Popularity	| Discovering similar opportunities     |
+| Trending	    | 20% Skills + 20% Collaborative + 60% Popularity	| Seeing popular jobs                   |
 
 ---
 
@@ -232,31 +233,31 @@ Match Score = Σ(user_proficiency × job_importance) / Σ(5 × job_importance) �
 
 Example:
 
-Job requires: Python(5), SQL(3)
-User has: Python(5), SQL(4)
-Perfect score = (5×5) + (5×3) = 40
-User score = (5×5) + (4×3) = 37
-Match = 92.5%
+| Job requires  | Python(5), SQL(3)  |
+| User has      | Python(5), SQL(4)  |
+| Perfect score | (5×5) + (5×3) = 40 |
+| User score    | (5×5) + (4×3) = 37 |
+| Match         | 92.5%              |
 
 ---
 
 ### User Roles
 
 #### Student
-View and manage personal profile
-Add/update/remove skills
-Get AI-powered job recommendations
-Apply to jobs
-Track application status
-Cancel pending applications
+| View and manage personal profile   |
+| Add/update/remove skills           |
+| Get AI-powered job recommendations |
+| Apply to jobs                      |
+| Track application status           |
+| Cancel pending applications        |
 
 #### Company
-Manage company profile
-Post new jobs with skill requirements
-Edit/delete existing jobs
-View applicants with match scores
-Accept/reject applications
-View recruitment analytics
+| Manage company profile                |
+| Post new jobs with skill requirements |
+| Edit/delete existing jobs             |
+| View applicants with match scores     |
+| Accept/reject applications            |  
+| View recruitment analytics            |
 
 ### Project Structure
 ``` text
@@ -304,23 +305,22 @@ job_recommendation_system/
 ---
 
 ### Future Enhancements
-Email Notifications - Alert students when application status changes
-Resume Upload - Allow students to upload resumes
-Job Alerts - Notify students about new matching jobs
-Company Reviews - Allow students to rate companies
-Advanced Analytics - More detailed recruitment insights
-API Integration - LinkedIn profile import
-Mobile App - React Native / Flutter mobile version
+| Email Notifications | Alert students when application status changes  |
+| Resume Upload       | Allow students to upload resumes                |
+| Job Alerts          | Notify students about new matching jobs         |
+| Company Reviews     | Allow students to rate companies                |
+| Advanced Analytics  | More detailed recruitment insights              |
+| API Integration     | LinkedIn profile import                         |
+| Mobile App          | React Native / Flutter mobile version           |
 
 ### Contributors
-Muhammad Talha Zaheer
-Muhammad Mubeen Haider
+| Muhammad Talha Zaheer  |
+| Muhammad Mubeen Haider |
 
 ### License
 This project is for educational purposes as part of the Database Management System course.
 
 ### Acknowledgments
-Course Instructor - For guidance and support
 scikit-learn - For ML algorithms
 Bootstrap - For frontend components
 Font Awesome - For icons
@@ -329,5 +329,5 @@ Font Awesome - For icons
 
 ### Contact
 For any queries or suggestions, please reach out to:
-Email: mtalhazaheer2004@gmail.com
-GitHub: Talha-Zaheer-04
+| Email: mtalhazaheer2004@gmail.com |
+| GitHub: Talha-Zaheer-04           |
