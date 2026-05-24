@@ -80,7 +80,6 @@ The **AI Skill & Job Recommendation System** is a database-driven platform that 
 ### 1. Frontend Layer
 - Student Dashboard
 - Company Dashboard
-- Career Services (Analytics)
 
 ### 2. Flask Application Layer
 - Routes (app.py)
