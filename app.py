@@ -10,7 +10,7 @@ from ml_integration import get_recommendations, get_recommendation_strategies, g
 import mysql.connector
 
 app = Flask(__name__)
-app.secret_key = ''
+app.secret_key = '123'
 
 
 # ==================== HELPER FUNCTIONS ====================

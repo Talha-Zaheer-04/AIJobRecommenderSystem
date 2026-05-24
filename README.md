@@ -15,7 +15,6 @@ A full-stack web application that uses Machine Learning to match students with s
 - [ML Recommendation Strategies](#ml-recommendation-strategies)
 - [User Roles](#user-roles)
 - [Project Structure](#project-structure)
-- [Screenshots](#screenshots)
 - [Future Enhancements](#future-enhancements)
 - [Contributors](#contributors)
 - [License](#license)
