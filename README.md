@@ -77,42 +77,31 @@ The **AI Skill & Job Recommendation System** is a database-driven platform that 
 
 ## 🏗️ System Architecture
 
-┌─────────────────────────────────────────────────────────────┐
-│ Frontend (Browser)                                          │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐     │
-│ │ Student     │ │ Company     │ │ Career Services     │     │
-│ │ Dashboard   │ │ Dashboard   │ │ (Analytics)         │     │
-│ └─────────────┘ └─────────────┘ └─────────────────────┘     │
-└─────────────────────────────────────────────────────────────┘
-│
-▼
-┌─────────────────────────────────────────────────────────────┐
-│ Flask Application                                           │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐     │
-│ │ Routes      │ │ Session     │ │ Template Engine     │     │
-│ │ (app.py)    │ │ Management  │ │ (Jinja2)            │     │
-│ └─────────────┘ └─────────────┘ └─────────────────────┘     │
-└─────────────────────────────────────────────────────────────┘
-│
-▼
-┌─────────────────────────────────────────────────────────────┐
-│ ML Module (ml/)                                             │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐     │
-│ │ Skill       │ │Collaborative│ │ Hybrid              │     │
-│ │ Matcher     │ │ Filter      │ │ Recommender         │     │
-│ └─────────────┘ └─────────────┘ └─────────────────────┘     │
-└─────────────────────────────────────────────────────────────┘
-│
-▼
-┌─────────────────────────────────────────────────────────────┐
-│ MySQL Database                                              │
-│ ┌───────┐ ┌───────┐ ┌───────┐ ┌──────────┐ ┌─────────────┐  │
-│ │ Users │ │ Skills│ │ Jobs  │ │Companies │ │Applications │  │
-│ └───────┘ └───────┘ └───────┘ └──────────┘ └─────────────┘  │
-│ ┌─────────────┐ ┌─────────────┐                             │
-│ │ User_Skills │ │ Job_Skills  │                             │
-│ └─────────────┘ └─────────────┘                             │
-└─────────────────────────────────────────────────────────────┘
+## System Architecture
+
+### 1. Frontend Layer
+- Student Dashboard
+- Company Dashboard
+- Career Services (Analytics)
+
+### 2. Flask Application Layer
+- Routes (app.py)
+- Session Management
+- Template Engine (Jinja2)
+
+### 3. ML Module Layer (ml/)
+- Skill Matcher
+- Collaborative Filter
+- Hybrid Recommender
+
+### 4. Database Layer (MySQL)
+- Users
+- Skills
+- Jobs
+- Companies
+- Applications
+- User_Skills
+- Job_Skills
 
 ---
 
