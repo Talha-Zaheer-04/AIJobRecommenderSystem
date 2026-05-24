@@ -75,7 +75,7 @@ The **AI Skill & Job Recommendation System** is a database-driven platform that 
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ## System Architecture
 
