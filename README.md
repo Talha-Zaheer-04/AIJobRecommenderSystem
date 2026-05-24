@@ -202,13 +202,14 @@ Open your browser and navigate to: http://localhost:5000
 
 ### Default Test Accounts
 
-Role	Email	                 Password
-Student	abdul.azeez@nu.edu.pk	 temp123
-Student	talha.zaheer@nu.edu.pk	 temp123
-Student	mubeen.haider@nu.edu.pk	 temp123
-Company	techcorp@techcorp.com	 temp123
-Company	dataworks@dataworks.com	 temp123
-Company	innovate@innovate.com	 temp123
+| Role	    | Email	                    | Password |
+|-----------|---------------------------|----------|
+| Student	| abdul.azeez@nu.edu.pk	    | temp123  |
+| Student	| talha.zaheer@nu.edu.pk	| temp123  |
+| Student	| mubeen.haider@nu.edu.pk	| temp123  |
+| Company	| techcorp@techcorp.com	    | temp123  |
+| Company	| dataworks@dataworks.com	| temp123  |
+| Company	| innovate@innovate.com	    | temp123  |
 
 ---
 
